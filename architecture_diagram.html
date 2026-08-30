@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calora AI - Streamlined Agentic Architecture</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #0B0F17;
+      color: #F3F4F6;
+      margin: 0;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+    h1 {
+      font-size: 26px;
+      font-weight: 800;
+      color: #10B981;
+      margin: 0 0 8px 0;
+    }
+    p {
+      color: #9CA3AF;
+      font-size: 14px;
+      margin: 0;
+    }
+    .card {
+      background: #111827;
+      border: 1px solid #1F2937;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      max-width: 1100px;
+      width: 100%;
+      overflow-x: auto;
+    }
+    .actions {
+      margin-top: 25px;
+      display: flex;
+      gap: 15px;
+    }
+    button {
+      background: #10B981;
+      color: #0B0F17;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    button:hover {
+      background: #34D399;
+      transform: translateY(-2px);
+    }
+    .btn-secondary {
+      background: #1F2937;
+      color: #F3F4F6;
+    }
+    .btn-secondary:hover {
+      background: #374151;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Calora AI - Streamlined Pure-LLM Architecture</h1>
+    <p>Voice UI &rarr; FastAPI &rarr; Gemini 3.6 Flash Multi-Agent Engine &rarr; SQLite</p>
+  </div>
+
+  <div class="card" id="diagram-container">
+    <div class="mermaid" id="mermaid-diagram">
+flowchart TD
+    subgraph FRONTEND ["🖥️ Frontend (React / Vite)"]
+        UI_VR["frontend/src/components/VoiceRecorder.jsx<br/>(MediaRecorder API)"]
+        UI_APP["frontend/src/App.jsx<br/>(State Management)"]
+        UI_RINGS["frontend/src/components/MacroRings.jsx"]
+        UI_TIME["frontend/src/components/MealTimeline.jsx"]
+        UI_REC["frontend/src/components/MealRecommender.jsx"]
+    end
+
+    subgraph API_GATEWAY ["⚡ FastAPI Gateway"]
+        MAIN["backend/app/main.py"]
+        API_VOICE["backend/app/api/voice.py<br/>(POST /api/voice/process-audio)"]
+        API_LOGS["backend/app/api/logs.py<br/>(GET /api/logs/daily-summary)"]
+    end
+
+    subgraph ORCHESTRATION ["🧠 Orchestration Layer"]
+        GEMINI["backend/app/services/gemini_service.py<br/>(Gemini 3.6 Flash / Audio STT)"]
+        ORCH["backend/app/agents/orchestrator.py<br/>(process_voice_transcript)"]
+    end
+
+    subgraph AGENTS ["🤖 Multi-Agent AI Engine (Gemini 3.6 Flash)"]
+        AGENT_INTENT["backend/app/agents/intent_agent.py<br/>(Intent Classification)"]
+        AGENT_NUTRI["backend/app/agents/nutrition_agent.py<br/>(Dynamic Indian & Global Nutrition Intelligence)"]
+        AGENT_WORK["backend/app/agents/workout_agent.py<br/>(MET Exercise Expenditure)"]
+        AGENT_CLAR["backend/app/agents/clarification_agent.py<br/>(1-Tap Assumption Check)"]
+        AGENT_REC["backend/app/agents/recommender_agent.py<br/>(Macro-Fitting Meal Suggestions)"]
+    end
+
+    subgraph PERSISTENCE ["💾 Database Layer"]
+        DB_MODELS["backend/app/db/models.py<br/>(MealLog / WorkoutLog)"]
+        SQLITE["backend/calora.db<br/>(SQLite Database)"]
+    end
+
+    %% Calls
+    UI_VR -->|1. Uploads .webm Audio Blob| API_VOICE
+    API_VOICE -->|2. Transcribe Audio| GEMINI
+    GEMINI -->|3. Returns Transcribed Text| API_VOICE
+    API_VOICE -->|4. Calls Master Orchestrator| ORCH
+
+    ORCH -->|5. Detect Intent| AGENT_INTENT
+    
+    ORCH -->|6a. If Meal Intent| AGENT_NUTRI
+    AGENT_NUTRI -->|7. Dynamic LLM Macro Math| GEMINI
+    AGENT_NUTRI -->|8. Check Ambiguities| AGENT_CLAR
+
+    ORCH -->|6b. If Workout Intent| AGENT_WORK
+
+    ORCH -->|9. Persist Records| DB_MODELS
+    DB_MODELS -->|Save SQL| SQLITE
+
+    ORCH -->|10. Return Structured JSON| API_VOICE
+    API_VOICE -->|11. Response Data| UI_APP
+
+    UI_APP -->|12. Renders Updates| UI_RINGS & UI_TIME & UI_REC
+    </div>
+  </div>
+
+  <div class="actions">
+    <button onclick="downloadSVG()">⬇️ Download as SVG</button>
+    <button onclick="window.print()" class="btn-secondary">🖨️ Save as PDF</button>
+  </div>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      themeVariables: {
+        darkMode: true,
+        background: '#111827',
+        primaryColor: '#10B981',
+        primaryTextColor: '#FFFFFF',
+        primaryBorderColor: '#059669',
+        lineColor: '#6EE7B7',
+        secondaryColor: '#1F2937',
+        tertiaryColor: '#0B0F17'
+      }
+    });
+
+    function downloadSVG() {
+      const svgElement = document.querySelector("#diagram-container svg");
+      if (!svgElement) return alert("Please wait for diagram to render");
+      const serializer = new XMLSerializer();
+      let source = serializer.serializeToString(svgElement);
+      source = '<?xml version="1.0" standalone="no"?>\r\n' + source;
+      const url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(source);
+      const downloadLink = document.createElement("a");
+      downloadLink.href = url;
+      downloadLink.download = "calora_ai_streamlined_architecture.svg";
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+    }
+  </script>
+</body>
+</html>
