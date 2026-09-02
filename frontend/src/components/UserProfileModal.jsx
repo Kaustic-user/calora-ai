@@ -1,17 +1,44 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, User, Target, Brain, Trash2, CheckCircle2 } from 'lucide-react';
+import { X, Save, Target, Brain, Trash2, CheckCircle2, Flame } from 'lucide-react';
 
 export default function UserProfileModal({ profile, onClose, onSave }) {
   const [activeTab, setActiveTab] = useState('goals'); // 'goals' or 'memory'
-  const [calorieTarget, setCalorieTarget] = useState(profile?.daily_calorie_target || profile?.calorie_target || 2000);
-  const [proteinTarget, setProteinTarget] = useState(profile?.daily_protein_target || profile?.protein_target || 120);
-  const [carbsTarget, setCarbsTarget] = useState(profile?.daily_carbs_target || profile?.carbs_target || 225);
-  const [fatTarget, setFatTarget] = useState(profile?.daily_fat_target || profile?.fat_target || 65);
+  const [calorieTarget, setCalorieTarget] = useState(profile?.calorie_target || profile?.daily_calorie_target || 2000);
+  const [proteinTarget, setProteinTarget] = useState(profile?.protein_target || profile?.daily_protein_target || 120);
+  const [carbsTarget, setCarbsTarget] = useState(profile?.carbs_target || profile?.daily_carbs_target || 225);
+  const [fatTarget, setFatTarget] = useState(profile?.fat_target || profile?.daily_fat_target || 65);
   const [weightKg, setWeightKg] = useState(profile?.weight_kg || 70.0);
+  const [heightCm, setHeightCm] = useState(profile?.height_cm || 175.0);
+  const [age, setAge] = useState(profile?.age || 25);
+  const [gender, setGender] = useState(profile?.gender || 'male');
+  const [activityLevel, setActivityLevel] = useState(profile?.activity_level || 'sedentary');
+  const [targetDeficit, setTargetDeficit] = useState(profile?.target_deficit_kcal || 500);
   const [dietaryPref, setDietaryPref] = useState(profile?.dietary_preference || 'vegetarian');
   
   const [memories, setMemories] = useState([]);
   const [loadingMemories, setLoadingMemories] = useState(false);
+
+  // Live BMR & TDEE calculation
+  const calculateBmrAndTdee = (w, h, a, g, act) => {
+    const wt = parseFloat(w) || 70;
+    const ht = parseFloat(h) || 175;
+    const ag = parseInt(a) || 25;
+    const bmrVal = (g === 'female')
+      ? (10 * wt) + (6.25 * ht) - (5 * ag) - 161
+      : (10 * wt) + (6.25 * ht) - (5 * ag) + 5;
+    
+    const mults = {
+      sedentary: 1.200,
+      lightly_active: 1.375,
+      moderately_active: 1.550,
+      very_active: 1.725,
+      extra_active: 1.900,
+    };
+    const tdeeVal = bmrVal * (mults[act] || 1.200);
+    return { bmr: Math.round(bmrVal), tdee: Math.round(tdeeVal) };
+  };
+
+  const { bmr: liveBmr, tdee: liveTdee } = calculateBmrAndTdee(weightKg, heightCm, age, gender, activityLevel);
 
   const fetchMemories = async () => {
     setLoadingMemories(true);
@@ -49,14 +76,19 @@ export default function UserProfileModal({ profile, onClose, onSave }) {
       carbs_target: parseFloat(carbsTarget),
       fat_target: parseFloat(fatTarget),
       weight_kg: parseFloat(weightKg) || 70.0,
+      height_cm: parseFloat(heightCm) || 175.0,
+      age: parseInt(age) || 25,
+      gender: gender,
+      activity_level: activityLevel,
+      target_deficit_kcal: parseInt(targetDeficit) || 500,
       dietary_preference: dietaryPref,
     });
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in overflow-y-auto">
       <div 
-        className="w-full max-w-lg rounded-3xl p-6 shadow-2xl border relative overflow-hidden transition-all"
+        className="w-full max-w-xl rounded-3xl p-6 shadow-2xl border relative overflow-hidden transition-all my-8"
         style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-card)' }}
       >
         {/* Header */}
@@ -70,10 +102,10 @@ export default function UserProfileModal({ profile, onClose, onSave }) {
             </div>
             <div>
               <h3 className="text-lg font-bold" style={{ color: 'var(--text-main)' }}>
-                {activeTab === 'goals' ? 'Nutrition Goals & Preferences' : 'AI Learned Memory & Habits'}
+                {activeTab === 'goals' ? 'TDEE & Nutrition Goals' : 'AI Learned Memory & Habits'}
               </h3>
               <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                {activeTab === 'goals' ? 'Configure targets & dietary preferences' : 'Preferences saved from your clarification choices'}
+                {activeTab === 'goals' ? 'Physical metrics, metabolic baseline, and daily targets' : 'Preferences saved from your clarification choices'}
               </p>
             </div>
           </div>
@@ -100,7 +132,7 @@ export default function UserProfileModal({ profile, onClose, onSave }) {
             }}
           >
             <Target className="w-4 h-4" />
-            Daily Targets
+            TDEE & Goals
           </button>
           <button
             onClick={() => setActiveTab('memory')}
@@ -117,6 +149,139 @@ export default function UserProfileModal({ profile, onClose, onSave }) {
 
         {activeTab === 'goals' ? (
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Live TDEE & BMR Calculation Overview */}
+            <div 
+              className="border p-4 rounded-2xl flex flex-col gap-3 shadow-md transition-all"
+              style={{ backgroundColor: 'var(--bg-card-subtle)', borderColor: 'var(--border-card)' }}
+            >
+              <div className="flex items-center gap-2">
+                <Flame className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
+                <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-main)' }}>
+                  Calculated Energy Expenditure
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 text-center">
+                <div 
+                  className="p-3 rounded-xl border transition-all" 
+                  style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-card)' }}
+                >
+                  <p className="text-[10px] uppercase font-semibold tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                    BMR (At Rest)
+                  </p>
+                  <p className="text-base font-extrabold mt-0.5" style={{ color: 'var(--text-main)' }}>
+                    {liveBmr} <span className="text-[10px] font-normal" style={{ color: 'var(--text-muted)' }}>kcal/day</span>
+                  </p>
+                </div>
+                <div 
+                  className="p-3 rounded-xl border transition-all" 
+                  style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-card)' }}
+                >
+                  <p className="text-[10px] uppercase font-semibold tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                    Maintenance TDEE
+                  </p>
+                  <p className="text-base font-extrabold mt-0.5" style={{ color: 'var(--text-main)' }}>
+                    {liveTdee} <span className="text-[10px] font-normal" style={{ color: 'var(--text-muted)' }}>kcal/day</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Physical Attributes Grid */}
+            <div 
+              className="border p-4 rounded-2xl space-y-3 transition-all" 
+              style={{ backgroundColor: 'var(--bg-card-subtle)', borderColor: 'var(--border-card)' }}
+            >
+              <h4 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-main)' }}>
+                Body & Lifestyle Metrics (For TDEE)
+              </h4>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {/* Gender */}
+                <div>
+                  <label className="text-[11px] font-semibold block mb-1" style={{ color: 'var(--text-muted)' }}>
+                    Biological Sex
+                  </label>
+                  <select
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value)}
+                    className="w-full border rounded-xl p-2.5 text-xs focus:outline-none focus:ring-2 transition-all"
+                    style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-card)', color: 'var(--text-main)' }}
+                  >
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                  </select>
+                </div>
+
+                {/* Age */}
+                <div>
+                  <label className="text-[11px] font-semibold block mb-1" style={{ color: 'var(--text-muted)' }}>
+                    Age (Years)
+                  </label>
+                  <input
+                    type="number"
+                    value={age}
+                    onChange={(e) => setAge(e.target.value)}
+                    className="w-full border rounded-xl p-2 text-xs focus:outline-none focus:ring-2 transition-all"
+                    style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-card)', color: 'var(--text-main)' }}
+                    placeholder="25"
+                  />
+                </div>
+
+                {/* Height */}
+                <div>
+                  <label className="text-[11px] font-semibold block mb-1" style={{ color: 'var(--text-muted)' }}>
+                    Height (cm)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.5"
+                    value={heightCm}
+                    onChange={(e) => setHeightCm(e.target.value)}
+                    className="w-full border rounded-xl p-2 text-xs focus:outline-none focus:ring-2 transition-all"
+                    style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-card)', color: 'var(--text-main)' }}
+                    placeholder="175"
+                  />
+                </div>
+
+                {/* Weight */}
+                <div>
+                  <label className="text-[11px] font-semibold block mb-1" style={{ color: 'var(--text-muted)' }}>
+                    Weight (kg)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={weightKg}
+                    onChange={(e) => setWeightKg(e.target.value)}
+                    className="w-full border rounded-xl p-2 text-xs focus:outline-none focus:ring-2 transition-all"
+                    style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-card)', color: 'var(--text-main)' }}
+                    placeholder="70.0"
+                  />
+                </div>
+              </div>
+
+              {/* Activity Level Dropdown */}
+              <div>
+                <label className="text-[11px] font-semibold block mb-1" style={{ color: 'var(--text-muted)' }}>
+                  Lifestyle / Physical Activity Level
+                </label>
+                <select
+                  value={activityLevel}
+                  onChange={(e) => setActivityLevel(e.target.value)}
+                  className="w-full border rounded-xl p-2.5 text-xs focus:outline-none focus:ring-2 transition-all"
+                  style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-card)', color: 'var(--text-main)' }}
+                >
+                  <option value="sedentary">Sedentary (Desk job, minimal movement × 1.20)</option>
+                  <option value="lightly_active">Lightly Active (Walking, light exercise 1-3 days × 1.38)</option>
+                  <option value="moderately_active">Moderately Active (8k-10k steps, moderate gym 3-5 days × 1.55)</option>
+                  <option value="very_active">Very Active (Heavy manual work or training 6-7 days × 1.73)</option>
+                  <option value="extra_active">Athlete / Extreme Training (2x/day or physical labor × 1.90)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Dietary Preference & Targets */}
             <div>
               <label className="text-xs font-semibold uppercase tracking-wider block mb-1" style={{ color: 'var(--text-muted)' }}>
                 Dietary Preference
@@ -124,7 +289,7 @@ export default function UserProfileModal({ profile, onClose, onSave }) {
               <select
                 value={dietaryPref}
                 onChange={(e) => setDietaryPref(e.target.value)}
-                className="w-full border rounded-xl p-3 text-sm focus:outline-none focus:ring-2 transition-all"
+                className="w-full border rounded-xl p-2.5 text-xs focus:outline-none focus:ring-2"
                 style={{ 
                   backgroundColor: 'var(--bg-card-subtle)', 
                   borderColor: 'var(--border-card)',
@@ -142,7 +307,7 @@ export default function UserProfileModal({ profile, onClose, onSave }) {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider block mb-1" style={{ color: 'var(--text-muted)' }}>
-                  Daily Calories (kcal)
+                  Daily Calorie Goal (kcal)
                 </label>
                 <input
                   type="number"
@@ -209,25 +374,6 @@ export default function UserProfileModal({ profile, onClose, onSave }) {
               </div>
             </div>
 
-            <div>
-              <label className="text-xs font-semibold uppercase tracking-wider block mb-1" style={{ color: 'var(--text-muted)' }}>
-                Body Weight (kg)
-              </label>
-              <input
-                type="number"
-                step="0.1"
-                value={weightKg}
-                onChange={(e) => setWeightKg(e.target.value)}
-                className="w-full border rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2"
-                style={{ 
-                  backgroundColor: 'var(--bg-card-subtle)', 
-                  borderColor: 'var(--border-card)',
-                  color: 'var(--text-main)' 
-                }}
-                placeholder="e.g. 70.0"
-              />
-            </div>
-
             <div className="flex justify-end gap-2 pt-4 border-t mt-4" style={{ borderColor: 'var(--border-card)' }}>
               <button
                 type="button"
@@ -239,11 +385,11 @@ export default function UserProfileModal({ profile, onClose, onSave }) {
               </button>
               <button
                 type="submit"
-                className="flex items-center gap-1.5 px-5 py-2 text-xs font-bold text-white rounded-xl shadow-lg transition-all"
-                style={{ backgroundColor: 'var(--accent-primary)' }}
+                className="flex items-center gap-1.5 px-5 py-2.5 text-xs font-bold text-black rounded-xl shadow-lg transition-all hover:opacity-90"
+                style={{ backgroundColor: 'var(--accent-primary)', color: '#000000' }}
               >
                 <Save className="w-4 h-4" />
-                Save Goals
+                Save TDEE & Goals
               </button>
             </div>
           </form>

@@ -14,7 +14,12 @@ class UserProfile(Base):
     fat_target = Column(Float, default=65.0)      # grams
     fiber_target = Column(Float, default=30.0)    # grams
     water_target_liters = Column(Float, default=3.0)
-    weight_kg = Column(Float, default=70.0)       # body weight in kg for MET burn calculation
+    weight_kg = Column(Float, default=70.0)       # body weight in kg
+    height_cm = Column(Float, default=175.0)      # height in cm
+    age = Column(Integer, default=25)             # age in years
+    gender = Column(String(20), default="male")   # male, female
+    activity_level = Column(String(30), default="sedentary") # sedentary, lightly_active, moderately_active, very_active, extra_active
+    target_deficit_kcal = Column(Integer, default=500) # target daily calorie deficit
     dietary_preference = Column(String(50), default="vegetarian") # vegetarian, eggetarian, non_vegetarian, vegan, jain
     allergies = Column(String(255), default="")
     created_at = Column(DateTime, default=datetime.utcnow)

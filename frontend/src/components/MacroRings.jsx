@@ -1,5 +1,5 @@
 import React from 'react';
-import { Flame, Activity, Zap, ShieldCheck } from 'lucide-react';
+import { Flame, Activity, Zap, ShieldCheck, TrendingDown, TrendingUp } from 'lucide-react';
 
 export default function MacroRings({ summary }) {
   if (!summary) return null;
@@ -17,6 +17,12 @@ export default function MacroRings({ summary }) {
     fat_consumed = 0,
     fiber_target = 30,
     fiber_consumed = 0,
+    tdee = 2000,
+    bmr = 1600,
+    total_burn = 2000,
+    calorie_deficit = 0,
+    is_in_deficit = false,
+    target_deficit = 500,
   } = summary;
 
   const effectiveNetCalories = Math.max(0, net_calories);
@@ -33,7 +39,8 @@ export default function MacroRings({ summary }) {
   const strokeDashoffset = circumference - (calPercent / 100) * circumference;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       {/* Main Calorie Ring Card */}
       <div 
         className="lg:col-span-5 border rounded-3xl p-6 shadow-2xl flex flex-col items-center justify-center relative overflow-hidden transition-colors"
@@ -192,6 +199,72 @@ export default function MacroRings({ summary }) {
           </div>
         </div>
       </div>
+
+      {/* Dynamic Calorie Deficit / Surplus Energy Balance Card */}
+      <div 
+        className="lg:col-span-12 border rounded-3xl p-5 shadow-xl transition-all relative overflow-hidden"
+        style={{ 
+          backgroundColor: 'var(--bg-card)', 
+          borderColor: is_in_deficit ? 'rgba(16, 185, 129, 0.4)' : 'rgba(245, 158, 11, 0.4)' 
+        }}
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+          <div className="flex items-center gap-3">
+            <div 
+              className="p-2.5 rounded-2xl border"
+              style={{ 
+                backgroundColor: is_in_deficit ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)', 
+                borderColor: is_in_deficit ? '#10B981' : '#F59E0B',
+                color: is_in_deficit ? '#10B981' : '#F59E0B' 
+              }}
+            >
+              {is_in_deficit ? <TrendingDown className="w-5 h-5" /> : <TrendingUp className="w-5 h-5" />}
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="text-sm font-bold text-white tracking-tight">
+                  Daily Energy Balance & Deficit
+                </h4>
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Maintenance TDEE (<strong className="text-slate-200">{Math.round(total_burn)} kcal</strong>) − Eaten (<strong className="text-slate-200">{Math.round(calories_consumed)} kcal</strong>) = <strong className={is_in_deficit ? 'text-emerald-400' : 'text-amber-400'}>{is_in_deficit ? `+${Math.round(calorie_deficit)} kcal Deficit` : `${Math.round(calorie_deficit)} kcal Surplus`}</strong>
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4 bg-slate-900/40 px-3.5 py-2 rounded-2xl border" style={{ borderColor: 'var(--border-card)' }}>
+            <div>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Goal Deficit</p>
+              <p className="text-sm font-extrabold text-emerald-400">+{target_deficit || 500} kcal</p>
+            </div>
+            <div className="h-7 w-px bg-slate-800"></div>
+            <div>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Status</p>
+              <p className="text-sm font-extrabold text-white">
+                {is_in_deficit ? 'Deficit (Fat Loss)' : 'Surplus'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Visual Deficit Progress Gauge Bar */}
+        <div className="w-full bg-slate-800/80 h-3.5 rounded-full overflow-hidden relative border border-slate-700/50">
+          <div 
+            className="h-full rounded-full transition-all duration-700"
+            style={{ 
+              width: `${Math.min(100, Math.max(3, (Math.max(0, calorie_deficit) / (target_deficit || 500)) * 100))}%`,
+              backgroundColor: is_in_deficit ? '#10B981' : '#F59E0B'
+            }}
+          ></div>
+        </div>
+        <div className="flex justify-between text-[11px] text-slate-400 font-medium mt-2">
+          <span>0 kcal (Maintenance Baseline)</span>
+          <span className="text-slate-300 font-semibold">Goal: +{target_deficit || 500} kcal</span>
+          <span className={is_in_deficit ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>
+            {Math.round(calorie_deficit)} / {target_deficit || 500} kcal ({Math.round((calorie_deficit / (target_deficit || 500)) * 100)}%)
+          </span>
+        </div>
+      </div>
     </div>
+  </div>
   );
 }

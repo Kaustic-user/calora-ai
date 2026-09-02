@@ -352,9 +352,9 @@ export default function App() {
       {/* 11-Mode Dynamic Interactive Background Canvas */}
       <DynamicBackground bgMode={activeBg} currentTheme={currentTheme} />
 
-      {/* Top Navigation Bar */}
+      {/* Fixed Top Navigation Bar */}
       <header 
-        className="sticky top-0 z-40 backdrop-blur-xl border-b px-4 sm:px-8 py-3.5 flex items-center justify-between transition-colors shadow-sm relative"
+        className="fixed top-0 inset-x-0 z-40 backdrop-blur-xl border-b px-4 sm:px-8 py-3.5 flex items-center justify-between transition-all shadow-md"
         style={{ 
           backgroundColor: 'var(--header-bg)', 
           borderColor: 'var(--border-card)' 
@@ -447,8 +447,8 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Container */}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 space-y-6 relative z-10">
+      {/* Main Container with top padding for fixed header */}
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-24 space-y-6 relative z-10">
         {/* Latest AI Insight Notification if available */}
         {latestInsights.length > 0 && (
           <div 

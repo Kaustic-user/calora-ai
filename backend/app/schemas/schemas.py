@@ -92,10 +92,31 @@ class UserProfileSchema(BaseModel):
     fiber_target: float = 30.0
     water_target_liters: float = 3.0
     weight_kg: float = 70.0
+    height_cm: float = 175.0
+    age: int = 25
+    gender: str = "male"
+    activity_level: str = "sedentary"
+    target_deficit_kcal: int = 500
     dietary_preference: str = "vegetarian"
     allergies: str = ""
+    bmr: Optional[float] = None
+    tdee: Optional[float] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+class UserProfileUpdate(BaseModel):
+    calorie_target: Optional[int] = None
+    protein_target: Optional[float] = None
+    carbs_target: Optional[float] = None
+    fat_target: Optional[float] = None
+    weight_kg: Optional[float] = None
+    height_cm: Optional[float] = None
+    age: Optional[int] = None
+    gender: Optional[str] = None
+    activity_level: Optional[str] = None
+    target_deficit_kcal: Optional[int] = None
+    dietary_preference: Optional[str] = None
+    allergies: Optional[str] = None
 
 class UserMemoryResponse(BaseModel):
     id: int
@@ -124,6 +145,12 @@ class DailySummaryResponse(BaseModel):
     fat_consumed: float
     fiber_target: float
     fiber_consumed: float
+    tdee: float = 2000.0
+    bmr: float = 1600.0
+    total_burn: float = 2000.0
+    calorie_deficit: float = 0.0
+    is_in_deficit: bool = False
+    target_deficit: int = 500
     meals: List[MealLogResponse]
     workouts: List[WorkoutLogResponse]
 
@@ -223,12 +250,20 @@ class DailyTrendPoint(BaseModel):
     fat: float
     burned: float
     net: float
+    tdee: float = 2000.0
+    total_burn: float = 2000.0
+    deficit: float = 0.0
+    is_deficit: bool = False
 
 class WeeklyTrendsResponse(BaseModel):
     calorie_target: int
     protein_target: float
+    tdee_baseline: float = 2000.0
+    bmr: float = 1600.0
     daily_data: List[DailyTrendPoint]
     weekly_avg_calories: float
     weekly_avg_protein: float
     weekly_total_burned: float
+    weekly_net_deficit: float = 0.0
+    projected_weight_change_kg: float = 0.0
     days_logged: int

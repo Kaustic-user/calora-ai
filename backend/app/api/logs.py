@@ -18,6 +18,8 @@ from app.schemas.schemas import (
     WorkoutLogManualCreate
 )
 
+from app.api.profile import compute_bmr_and_tdee
+
 router = APIRouter(prefix="/api/logs", tags=["Logs & Summary"])
 
 @router.get("/daily-summary", response_model=DailySummaryResponse)
@@ -74,6 +76,13 @@ def get_daily_summary(
 
     workout_responses = [WorkoutLogResponse.model_validate(w) for w in workouts]
 
+    bmr, tdee = compute_bmr_and_tdee(
+        profile.weight_kg, profile.height_cm, profile.age, profile.gender, profile.activity_level
+    )
+    total_burn = round(tdee)
+    calorie_deficit = round(tdee - cal_consumed)
+    is_in_deficit = calorie_deficit > 0
+
     return DailySummaryResponse(
         date=query_date,
         calorie_target=profile.calorie_target,
@@ -88,6 +97,12 @@ def get_daily_summary(
         fat_consumed=round(fat_consumed),
         fiber_target=round(profile.fiber_target),
         fiber_consumed=round(fiber_consumed),
+        tdee=tdee,
+        bmr=bmr,
+        total_burn=total_burn,
+        calorie_deficit=calorie_deficit,
+        is_in_deficit=is_in_deficit,
+        target_deficit=profile.target_deficit_kcal or 500,
         meals=meal_responses,
         workouts=workout_responses
     )
@@ -104,6 +119,10 @@ def get_weekly_trends(db: Session = Depends(get_db)):
         db.commit()
         db.refresh(profile)
 
+    bmr, tdee = compute_bmr_and_tdee(
+        profile.weight_kg, profile.height_cm, profile.age, profile.gender, profile.activity_level
+    )
+
     today = date.today()
     start_date = today - timedelta(days=6)
 
@@ -115,6 +134,7 @@ def get_weekly_trends(db: Session = Depends(get_db)):
     total_cals = 0.0
     total_protein = 0.0
     total_burned = 0.0
+    total_weekly_deficit = 0.0
     days_logged_count = 0
 
     for i in range(6, -1, -1):
@@ -130,36 +150,58 @@ def get_weekly_trends(db: Session = Depends(get_db)):
         day_fat = sum(m.fat_g for m in day_meals)
         day_burn = sum(w.calories_burned for w in day_workouts)
 
-        if len(day_meals) > 0 or len(day_workouts) > 0:
+        has_logs = (len(day_meals) > 0 or len(day_workouts) > 0)
+        if has_logs:
             days_logged_count += 1
-
-        total_cals += day_cal
-        total_protein += day_prot
-        total_burned += day_burn
+            day_total_burn = round(tdee)
+            day_deficit = round(tdee - day_cal)
+            total_weekly_deficit += day_deficit
+            total_cals += day_cal
+            total_protein += day_prot
+            total_burned += day_burn
+        elif cur_date == today:
+            # For today, show live deficit against TDEE even before first meal
+            day_total_burn = round(tdee)
+            day_deficit = round(tdee - day_cal) if (day_cal > 0) else 0
+            if day_cal > 0:
+                days_logged_count += 1
+                total_weekly_deficit += day_deficit
+        else:
+            day_total_burn = round(tdee)
+            day_deficit = 0
 
         daily_points.append(DailyTrendPoint(
             date=cur_date,
             day=day_label,
-            calories=round(day_cal, 1),
-            protein=round(day_prot, 1),
-            carbs=round(day_carbs, 1),
-            fat=round(day_fat, 1),
-            burned=round(day_burn, 1),
-            net=round(day_cal - day_burn, 1)
+            calories=round(day_cal),
+            protein=round(day_prot),
+            carbs=round(day_carbs),
+            fat=round(day_fat),
+            burned=round(day_burn),
+            net=round(day_cal - day_burn),
+            tdee=tdee,
+            total_burn=day_total_burn,
+            deficit=day_deficit,
+            is_deficit=day_deficit > 0
         ))
 
-    # Averages across the 7 days
-    avg_divisor = 7
-    avg_cals = round(total_cals / avg_divisor, 1)
-    avg_prot = round(total_protein / avg_divisor, 1)
+    # Averages across the logged days (or min 1)
+    avg_divisor = max(1, days_logged_count)
+    avg_cals = round(total_cals / avg_divisor)
+    avg_prot = round(total_protein / avg_divisor)
+    projected_kg = round(total_weekly_deficit / 7700.0, 2)
 
     return WeeklyTrendsResponse(
         calorie_target=profile.calorie_target,
         protein_target=profile.protein_target,
+        tdee_baseline=tdee,
+        bmr=bmr,
         daily_data=daily_points,
         weekly_avg_calories=avg_cals,
         weekly_avg_protein=avg_prot,
-        weekly_total_burned=round(total_burned, 1),
+        weekly_total_burned=round(total_burned),
+        weekly_net_deficit=round(total_weekly_deficit),
+        projected_weight_change_kg=projected_kg,
         days_logged=days_logged_count
     )
 
