@@ -74,7 +74,25 @@ WORKOUT_METRICS_REGEX = re.compile(
 
 # 7. Conversational / Advice Triggers
 ADVICE_TRIGGERS_REGEX = re.compile(
-    r'\b(should\s+i|how\s+much|suggest|recommend|what\s+to\s+eat|advice|tips|recipe|target|goal|how\s+many\s+calories)\b',
+    r'\b(should\s+i|how\s+much\s+should|suggest|recommend|what\s+to\s+eat|advice|tips|recipe|target|goal|how\s+many\s+calories\s+in)\b',
+    re.IGNORECASE
+)
+
+# 8. Mutation / Update / Delete Triggers
+MUTATION_TRIGGERS_REGEX = re.compile(
+    r'\b(update|change|modify|replace|edit|remove|delete|cancel|instead\s+of|swap|correct)\b',
+    re.IGNORECASE
+)
+
+# 9. Historical Query / Navigation Triggers
+QUERY_HISTORY_REGEX = re.compile(
+    r'\b(show\s+me|what\s+did\s+i\s+(?:eat|have|log|do)|view|history|check\s+logs|how\s+many\s+calories\s+did\s+i\s+(?:eat|burn|consume)|did\s+i\s+workout)\b',
+    re.IGNORECASE
+)
+
+# 10. Temporal Expressions
+TEMPORAL_REGEX = re.compile(
+    r'\b(yesterday|day\s+before\s+yesterday|today|last\s+night|this\s+morning|last\s+evening|on\s+(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)|\d+\s+days?\s+ago|\d{1,2}(?:st|nd|rd|th)?\s+(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*)\b',
     re.IGNORECASE
 )
 
@@ -89,7 +107,15 @@ class IntentAgent:
         if not text_clean:
             return ("unknown", 1.0)
 
-        # Check advice triggers first (e.g. questions)
+        # Check mutation/update triggers
+        if MUTATION_TRIGGERS_REGEX.search(text_clean):
+            return ("mutation", 0.95)
+
+        # Check historical query triggers
+        if QUERY_HISTORY_REGEX.search(text_clean):
+            return ("query_history", 0.95)
+
+        # Check advice triggers (e.g. general questions)
         if "?" in text_clean or ADVICE_TRIGGERS_REGEX.search(text_clean):
             return ("advice", 0.95)
 
@@ -142,7 +168,9 @@ class IntentAgent:
             "You are an Intent Classifier for a health tracking application. "
             "Classify the user's spoken input into exactly one of: "
             "'meal' (logging food/drinks), 'workout' (logging exercise/gym), "
-            "'both' (both food and workout), 'advice' (asking health tips/questions), "
+            "'both' (both food and workout), 'mutation' (editing, updating, replacing, or deleting existing logs), "
+            "'query_history' (viewing, checking, or asking about past meals/workouts for a specific date), "
+            "'advice' (asking general health tips/questions), "
             "or 'unknown' (unrelated noise/chat). "
             "Output JSON with format: {'intent': string, 'confidence': float}"
         )

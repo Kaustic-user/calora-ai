@@ -1,7 +1,7 @@
 import React from 'react';
-import { Utensils, Trash2, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Utensils, Trash2, Edit2, Clock, CheckCircle2, AlertCircle, Plus } from 'lucide-react';
 
-export default function MealTimeline({ meals, onDeleteMeal }) {
+export default function MealTimeline({ meals, onDeleteMeal, onEditMeal, onAddMeal, isToday = true }) {
   if (!meals || meals.length === 0) {
     return (
       <div 
@@ -18,10 +18,20 @@ export default function MealTimeline({ meals, onDeleteMeal }) {
         >
           <Utensils className="w-6 h-6" />
         </div>
-        <h4 className="text-base font-semibold text-slate-200">No Meals Logged Today</h4>
+        <h4 className="text-base font-semibold text-slate-200">{isToday ? "No Meals Logged Today" : "No Meals Logged for this Date"}</h4>
         <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
-          Tap the voice assistant above and record what you ate to automatically track your calories and macros!
+          Tap the voice assistant above or use the button below to manually log your meal!
         </p>
+        {onAddMeal && (
+          <button
+            onClick={onAddMeal}
+            className="mt-4 px-4 py-2 rounded-xl text-xs font-bold text-black inline-flex items-center gap-1.5 shadow-md transition-all hover:opacity-90"
+            style={{ backgroundColor: 'var(--accent-primary)' }}
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add Meal</span>
+          </button>
+        )}
       </div>
     );
   }
@@ -44,8 +54,18 @@ export default function MealTimeline({ meals, onDeleteMeal }) {
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-bold text-white flex items-center gap-2">
           <Utensils className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
-          Today's Meals ({meals.length})
+          {isToday ? "Today's Meals" : "Logged Meals"} ({meals.length})
         </h3>
+
+        {onAddMeal && (
+          <button
+            onClick={onAddMeal}
+            className="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white border border-slate-700/60 hover:border-emerald-500/50 bg-slate-900/60 flex items-center gap-1.5 transition-all shadow-sm"
+          >
+            <Plus className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Add Meal</span>
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -77,13 +97,24 @@ export default function MealTimeline({ meals, onDeleteMeal }) {
                   </h4>
                 </div>
 
-                <button
-                  onClick={() => onDeleteMeal(meal.id)}
-                  className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all"
-                  title="Delete meal"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                  {onEditMeal && (
+                    <button
+                      onClick={() => onEditMeal(meal)}
+                      className="p-1.5 text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-all"
+                      title="Edit meal"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  <button
+                    onClick={() => onDeleteMeal(meal.id)}
+                    className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all"
+                    title="Delete meal"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
 
               {/* Items List */}

@@ -127,6 +127,7 @@ def resolve_clarification(
 
             finalized_workout = recalculated_workout or payload.pending_workout
             if finalized_workout:
+                w_date = finalized_workout.log_date if finalized_workout.log_date else (payload.pending_workout.log_date if payload.pending_workout and payload.pending_workout.log_date else date.today())
                 db_workout = WorkoutLog(
                     exercise_name=finalized_workout.exercise_name,
                     workout_category=finalized_workout.workout_category,
@@ -134,12 +135,13 @@ def resolve_clarification(
                     intensity=finalized_workout.intensity,
                     calories_burned=finalized_workout.calories_burned,
                     muscle_groups=finalized_workout.muscle_groups,
-                    notes=f"Confirmed: {payload.chosen_option}"
+                    notes=f"Confirmed: {payload.chosen_option}",
+                    log_date=w_date
                 )
                 db.add(db_workout)
                 db.commit()
                 db.refresh(db_workout)
-                logger.info(f"[Database] Successfully persisted clarified workout '{db_workout.exercise_name}' (id={db_workout.id}, burned={db_workout.calories_burned} kcal)")
+                logger.info(f"[Database] Successfully persisted clarified workout '{db_workout.exercise_name}' (id={db_workout.id}, burned={db_workout.calories_burned} kcal, date={w_date})")
 
                 return {
                     "status": "confirmed_and_logged",
@@ -147,6 +149,7 @@ def resolve_clarification(
                     "exercise_name": db_workout.exercise_name,
                     "calories_burned": db_workout.calories_burned,
                     "duration_minutes": db_workout.duration_minutes,
+                    "log_date": str(w_date),
                     "message": f"Recorded {db_workout.exercise_name} ({db_workout.duration_minutes} mins, {db_workout.calories_burned} kcal burned)!"
                 }
 
@@ -179,6 +182,7 @@ def resolve_clarification(
         if finalized_meals:
             saved_records = []
             for meal in finalized_meals:
+                m_date = meal.log_date if meal.log_date else (payload.pending_meal.log_date if payload.pending_meal and payload.pending_meal.log_date else date.today())
                 db_meal = MealLog(
                     meal_type=meal.meal_type,
                     meal_title=meal.meal_title,
@@ -190,13 +194,14 @@ def resolve_clarification(
                     fat_g=meal.fat_g,
                     fiber_g=meal.fiber_g,
                     assumptions_json=json.dumps(meal.assumptions + [f"Confirmed: {payload.chosen_option}"]),
-                    is_confirmed=True
+                    is_confirmed=True,
+                    log_date=m_date
                 )
                 db.add(db_meal)
                 db.commit()
                 db.refresh(db_meal)
                 saved_records.append(db_meal)
-                logger.info(f"[Database] Successfully persisted clarified meal '{db_meal.meal_title}' (id={db_meal.id}, calories={db_meal.calories} kcal) into SQLite")
+                logger.info(f"[Database] Successfully persisted clarified meal '{db_meal.meal_title}' (id={db_meal.id}, calories={db_meal.calories} kcal, date={m_date}) into SQLite")
 
             titles = ", ".join(m.meal_title for m in saved_records)
             total_cals = round(sum(m.calories for m in saved_records), 1)

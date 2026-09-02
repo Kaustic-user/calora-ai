@@ -153,6 +153,54 @@ class AgentProcessResponse(BaseModel):
     clarifications: List[ClarificationItem] = []
     insights: List[str] = []
     status: str = "success"
+    navigation_date: Optional[date] = None
+    operation_performed: Optional[str] = None # created, updated, deleted, queried, none
+
+# ==========================================
+# Manual CRUD & Update Schemas
+# ==========================================
+
+class MealLogUpdate(BaseModel):
+    meal_type: Optional[str] = None
+    meal_title: Optional[str] = None
+    items: Optional[List[Dict[str, Any]]] = None
+    calories: Optional[float] = None
+    protein_g: Optional[float] = None
+    carbs_g: Optional[float] = None
+    fat_g: Optional[float] = None
+    fiber_g: Optional[float] = None
+    log_date: Optional[date] = None
+
+class WorkoutLogUpdate(BaseModel):
+    exercise_name: Optional[str] = None
+    workout_category: Optional[str] = None
+    duration_minutes: Optional[int] = None
+    intensity: Optional[str] = None
+    calories_burned: Optional[float] = None
+    muscle_groups: Optional[str] = None
+    notes: Optional[str] = None
+    log_date: Optional[date] = None
+
+class MealLogManualCreate(BaseModel):
+    meal_type: str = "lunch"
+    meal_title: str
+    items: List[Dict[str, Any]] = []
+    calories: float
+    protein_g: float = 0.0
+    carbs_g: float = 0.0
+    fat_g: float = 0.0
+    fiber_g: float = 0.0
+    log_date: Optional[date] = None
+
+class WorkoutLogManualCreate(BaseModel):
+    exercise_name: str
+    workout_category: str = "strength"
+    duration_minutes: int = 30
+    intensity: str = "moderate"
+    calories_burned: float
+    muscle_groups: str = "Full Body"
+    notes: Optional[str] = None
+    log_date: Optional[date] = None
 
 class MealRecommendationOption(BaseModel):
     title: str

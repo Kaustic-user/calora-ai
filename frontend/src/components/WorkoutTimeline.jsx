@@ -1,7 +1,7 @@
 import React from 'react';
-import { Dumbbell, Trash2, Clock, Flame, Zap } from 'lucide-react';
+import { Dumbbell, Trash2, Edit2, Clock, Flame, Zap, Plus } from 'lucide-react';
 
-export default function WorkoutTimeline({ workouts, onDeleteWorkout }) {
+export default function WorkoutTimeline({ workouts, onDeleteWorkout, onEditWorkout, onAddWorkout, isToday = true }) {
   if (!workouts || workouts.length === 0) {
     return (
       <div 
@@ -11,17 +11,29 @@ export default function WorkoutTimeline({ workouts, onDeleteWorkout }) {
         <div 
           className="w-12 h-12 rounded-2xl border flex items-center justify-center mx-auto mb-3"
           style={{ 
-            backgroundColor: 'rgba(244, 63, 94, 0.1)', 
-            borderColor: 'rgba(244, 63, 94, 0.2)',
-            color: '#F43F5E' 
+            backgroundColor: 'var(--accent-glow)', 
+            borderColor: 'var(--accent-primary)',
+            color: 'var(--accent-primary)' 
           }}
         >
           <Dumbbell className="w-6 h-6" />
         </div>
-        <h4 className="text-base font-semibold" style={{ color: 'var(--text-main)' }}>No Workouts Logged Today</h4>
+        <h4 className="text-base font-semibold" style={{ color: 'var(--text-main)' }}>
+          {isToday ? "No Workouts Logged Today" : "No Workouts Logged for this Date"}
+        </h4>
         <p className="text-xs mt-1 max-w-sm mx-auto" style={{ color: 'var(--text-muted)' }}>
-          Record your exercise (e.g. <i>"45 min chest workout"</i> or <i>"Ran 5km"</i>) to automatically track calories burned!
+          Record your exercise (e.g. <i>"45 min chest workout"</i> or <i>"Ran 5km"</i>) or add one manually!
         </p>
+        {onAddWorkout && (
+          <button
+            onClick={onAddWorkout}
+            className="mt-4 px-4 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 shadow-md transition-all hover:opacity-90"
+            style={{ backgroundColor: 'var(--accent-primary)', color: '#000000' }}
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add Workout</span>
+          </button>
+        )}
       </div>
     );
   }
@@ -42,9 +54,19 @@ export default function WorkoutTimeline({ workouts, onDeleteWorkout }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-bold flex items-center gap-2" style={{ color: 'var(--text-main)' }}>
-          <Dumbbell className="w-5 h-5 text-rose-400" />
-          Today's Workouts ({workouts.length})
+          <Dumbbell className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
+          {isToday ? "Today's Workouts" : "Logged Workouts"} ({workouts.length})
         </h3>
+
+        {onAddWorkout && (
+          <button
+            onClick={onAddWorkout}
+            className="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white border border-slate-700/60 bg-slate-900/60 flex items-center gap-1.5 transition-all shadow-sm hover:border-slate-500"
+          >
+            <Plus className="w-3.5 h-3.5" style={{ color: 'var(--accent-primary)' }} />
+            <span>Add Workout</span>
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -76,13 +98,24 @@ export default function WorkoutTimeline({ workouts, onDeleteWorkout }) {
                   </h4>
                 </div>
 
-                <button
-                  onClick={() => onDeleteWorkout(workout.id)}
-                  className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all"
-                  title="Delete workout"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                  {onEditWorkout && (
+                    <button
+                      onClick={() => onEditWorkout(workout)}
+                      className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all"
+                      title="Edit workout"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  <button
+                    onClick={() => onDeleteWorkout(workout.id)}
+                    className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all"
+                    title="Delete workout"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
 
               {/* Muscle Groups */}

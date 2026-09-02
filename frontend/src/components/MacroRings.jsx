@@ -20,7 +20,7 @@ export default function MacroRings({ summary }) {
   } = summary;
 
   const effectiveNetCalories = Math.max(0, net_calories);
-  const remainingCalories = Math.max(0, calorie_target - net_calories);
+  const remainingCalories = Math.max(0, Math.round(calorie_target - net_calories));
   const calPercent = Math.min(100, Math.max(0, Math.round((effectiveNetCalories / calorie_target) * 100))) || 0;
   const proteinPercent = Math.min(100, Math.round((protein_consumed / protein_target) * 100)) || 0;
   const carbsPercent = Math.min(100, Math.round((carbs_consumed / carbs_target) * 100)) || 0;
@@ -90,18 +90,18 @@ export default function MacroRings({ summary }) {
         >
           <div>
             <p className="text-[11px] text-slate-400 uppercase font-medium">Eaten</p>
-            <p className="text-sm font-bold text-slate-200">{calories_consumed}</p>
+            <p className="text-sm font-bold text-slate-200">{Math.round(calories_consumed)}</p>
           </div>
           <div>
             <p className="text-[11px] text-slate-400 uppercase font-medium">Burned</p>
             <p className="text-sm font-bold text-rose-400 flex items-center justify-center gap-0.5">
               <Activity className="w-3.5 h-3.5" />
-              {calories_burned}
+              {Math.round(calories_burned)}
             </p>
           </div>
           <div>
             <p className="text-[11px] text-slate-400 uppercase font-medium">Target</p>
-            <p className="text-sm font-bold text-slate-200">{calorie_target}</p>
+            <p className="text-sm font-bold text-slate-200">{Math.round(calorie_target)}</p>
           </div>
         </div>
       </div>
@@ -128,7 +128,7 @@ export default function MacroRings({ summary }) {
             <div className="flex justify-between text-xs font-semibold mb-1">
               <span className="flex items-center gap-1.5 font-bold" style={{ color: 'var(--color-protein)' }}>
                 <span className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--color-protein)' }}></span>
-                Protein ({protein_consumed}g / {protein_target}g)
+                Protein ({Math.round(protein_consumed)}g / {Math.round(protein_target)}g)
               </span>
               <span className="text-slate-400">{proteinPercent}%</span>
             </div>
@@ -145,7 +145,7 @@ export default function MacroRings({ summary }) {
             <div className="flex justify-between text-xs font-semibold mb-1">
               <span className="flex items-center gap-1.5 font-bold" style={{ color: 'var(--color-carbs)' }}>
                 <span className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--color-carbs)' }}></span>
-                Carbohydrates ({carbs_consumed}g / {carbs_target}g)
+                Carbohydrates ({Math.round(carbs_consumed)}g / {Math.round(carbs_target)}g)
               </span>
               <span className="text-slate-400">{carbsPercent}%</span>
             </div>
@@ -162,7 +162,7 @@ export default function MacroRings({ summary }) {
             <div className="flex justify-between text-xs font-semibold mb-1">
               <span className="flex items-center gap-1.5 font-bold" style={{ color: 'var(--color-fat)' }}>
                 <span className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--color-fat)' }}></span>
-                Fats ({fat_consumed}g / {fat_target}g)
+                Fats ({Math.round(fat_consumed)}g / {Math.round(fat_target)}g)
               </span>
               <span className="text-slate-400">{fatPercent}%</span>
             </div>
@@ -179,7 +179,7 @@ export default function MacroRings({ summary }) {
             <div className="flex justify-between text-xs font-semibold mb-1">
               <span className="flex items-center gap-1.5 font-bold" style={{ color: 'var(--color-fiber)' }}>
                 <span className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--color-fiber)' }}></span>
-                Dietary Fiber ({fiber_consumed}g / {fiber_target}g)
+                Dietary Fiber ({Math.round(fiber_consumed)}g / {Math.round(fiber_target)}g)
               </span>
               <span className="text-slate-400">{fiberPercent}%</span>
             </div>

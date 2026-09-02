@@ -141,15 +141,16 @@ export default function ClarificationBanner({
                   <button
                     key={idx}
                     disabled={isThisRecording || isUploading}
-                    onClick={() => onResolve(item.id, opt)}
+                    onClick={() => onResolve && onResolve(item.id, opt)}
                     className="px-3.5 py-2 border text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-1.5 hover:scale-105 active:scale-95 text-white disabled:opacity-50"
                     style={{ 
                       backgroundColor: idx === 0 ? 'var(--accent-primary)' : 'var(--bg-card)', 
-                      borderColor: idx === 0 ? 'var(--accent-primary)' : 'var(--border-card)' 
+                      borderColor: idx === 0 ? 'var(--accent-primary)' : 'var(--border-card)',
+                      color: idx === 0 ? '#000000' : 'inherit'
                     }}
                   >
                     <Check className="w-3.5 h-3.5" />
-                    {opt}
+                    <span>{opt}</span>
                   </button>
                 ))}
 
@@ -164,7 +165,7 @@ export default function ClarificationBanner({
                       startVoiceClarification(item.id);
                     }
                   }}
-                  className={`px-3 py-2 border text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-1.5 hover:scale-105 active:scale-95 ${
+                  className={`px-3 py-2 border text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-1.5 hover:scale-105 active:scale-95 disabled:opacity-50 ${
                     isThisRecording 
                       ? 'bg-rose-600 border-rose-500 text-white animate-pulse' 
                       : 'bg-slate-900 border-slate-700 text-slate-300 hover:border-emerald-500 hover:text-emerald-400'

@@ -24,6 +24,8 @@ import ProgressCharts from './components/ProgressCharts';
 import UserProfileModal from './components/UserProfileModal';
 import ThemeSelectorModal, { THEMES } from './components/ThemeSelectorModal';
 import BackgroundSelectorModal, { BACKGROUNDS } from './components/BackgroundSelectorModal';
+import DateNavigator from './components/DateNavigator';
+import EditLogModal from './components/EditLogModal';
 
 export default function App() {
   const [dailySummary, setDailySummary] = useState(null);
@@ -37,6 +39,24 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [showThemes, setShowThemes] = useState(false);
   const [showBgModal, setShowBgModal] = useState(false);
+
+  // Date Navigation State (YYYY-MM-DD)
+  const getTodayStr = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const [selectedDate, setSelectedDate] = useState(getTodayStr());
+
+  // Edit / Manual Add Modal State
+  const [editModalState, setEditModalState] = useState({
+    isOpen: false,
+    mode: 'meal', // 'meal' or 'workout'
+    data: null    // null = create mode, object = edit mode
+  });
   
   // Theme palette and Background canvas selection (persists in localStorage)
   const [currentTheme, setCurrentTheme] = useState(() => {
@@ -58,9 +78,10 @@ export default function App() {
     localStorage.setItem('calora_bg', activeBg);
   }, [activeBg]);
 
-  const fetchDailySummary = async () => {
+  const fetchDailySummary = async (dateToFetch = selectedDate) => {
     try {
-      const res = await fetch('/api/logs/daily-summary');
+      const url = dateToFetch ? `/api/logs/daily-summary?target_date=${dateToFetch}` : '/api/logs/daily-summary';
+      const res = await fetch(url);
       const data = await res.json();
       setDailySummary(data);
     } catch (err) {
@@ -79,9 +100,9 @@ export default function App() {
   };
 
   useEffect(() => {
-    fetchDailySummary();
+    fetchDailySummary(selectedDate);
     fetchProfile();
-  }, []);
+  }, [selectedDate]);
 
   // Auto-dismiss top notifications after 6 seconds (TTL)
   useEffect(() => {
@@ -107,7 +128,7 @@ export default function App() {
         setPendingTranscript('');
 
         // Celebrate ONLY if a meal was saved immediately (no clarifications) or workout was logged
-        if (result.detected_meal || result.detected_workout) {
+        if (result.detected_meal || result.detected_workout || result.operation_performed === 'created' || result.operation_performed === 'updated') {
           confetti({
             particleCount: 45,
             spread: 65,
@@ -121,14 +142,23 @@ export default function App() {
         setLatestInsights(result.insights);
       }
 
-      fetchDailySummary();
+      // Auto-navigate to target date if returned by voice agent
+      if (result.navigation_date) {
+        setSelectedDate(result.navigation_date);
+        fetchDailySummary(result.navigation_date);
+      } else {
+        fetchDailySummary(selectedDate);
+      }
     }
   };
 
   const handleResolveClarification = async (clarificationId, chosenOption) => {
+    setIsProcessing(true);
     const remaining = activeClarifications.filter((c) => c.id !== clarificationId);
-    setActiveClarifications(remaining);
     const isFinal = remaining.length === 0;
+
+    // Immediately remove from screen so clarification banner is never stuck/lingering
+    setActiveClarifications(remaining);
 
     try {
       const res = await fetch('/api/voice/resolve-clarification', {
@@ -146,7 +176,6 @@ export default function App() {
       const data = await res.json();
 
       if (isFinal) {
-        // Celebrate upon final verified log!
         confetti({
           particleCount: 50,
           spread: 70,
@@ -156,7 +185,7 @@ export default function App() {
         setPendingMeal(null);
         setPendingWorkout(null);
         setPendingTranscript('');
-        fetchDailySummary();
+        await fetchDailySummary(selectedDate);
       }
 
       if (data.message) {
@@ -166,13 +195,18 @@ export default function App() {
       }
     } catch (err) {
       console.error('Error saving clarification preference:', err);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   const handleResolveClarificationVoice = async (clarificationId, audioBlob) => {
+    setIsProcessing(true);
     const remaining = activeClarifications.filter((c) => c.id !== clarificationId);
-    setActiveClarifications(remaining);
     const isFinal = remaining.length === 0;
+
+    // Immediately remove from screen so clarification banner is never stuck/lingering
+    setActiveClarifications(remaining);
 
     try {
       const formData = new FormData();
@@ -199,7 +233,7 @@ export default function App() {
         setPendingMeal(null);
         setPendingWorkout(null);
         setPendingTranscript('');
-        fetchDailySummary();
+        await fetchDailySummary(selectedDate);
       }
 
       if (data.message) {
@@ -209,13 +243,15 @@ export default function App() {
       }
     } catch (err) {
       console.error('Error processing spoken clarification:', err);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   const handleDeleteMeal = async (mealId) => {
     try {
       await fetch(`/api/logs/meals/${mealId}`, { method: 'DELETE' });
-      fetchDailySummary();
+      fetchDailySummary(selectedDate);
     } catch (err) {
       console.error('Error deleting meal:', err);
     }
@@ -224,9 +260,51 @@ export default function App() {
   const handleDeleteWorkout = async (workoutId) => {
     try {
       await fetch(`/api/logs/workouts/${workoutId}`, { method: 'DELETE' });
-      fetchDailySummary();
+      fetchDailySummary(selectedDate);
     } catch (err) {
       console.error('Error deleting workout:', err);
+    }
+  };
+
+  // UI Edit & Add Handlers
+  const handleEditMeal = (meal) => {
+    setEditModalState({
+      isOpen: true,
+      mode: 'meal',
+      data: meal
+    });
+  };
+
+  const handleAddMeal = () => {
+    setEditModalState({
+      isOpen: true,
+      mode: 'meal',
+      data: null
+    });
+  };
+
+  const handleEditWorkout = (workout) => {
+    setEditModalState({
+      isOpen: true,
+      mode: 'workout',
+      data: workout
+    });
+  };
+
+  const handleAddWorkout = () => {
+    setEditModalState({
+      isOpen: true,
+      mode: 'workout',
+      data: null
+    });
+  };
+
+  const handleSaveEdit = (dateUpdated) => {
+    if (dateUpdated) {
+      setSelectedDate(dateUpdated);
+      fetchDailySummary(dateUpdated);
+    } else {
+      fetchDailySummary(selectedDate);
     }
   };
 
@@ -425,6 +503,15 @@ export default function App() {
 
         {activeTab === 'dashboard' ? (
           <>
+            {/* Interactive Date Navigation Bar */}
+            <DateNavigator
+              selectedDate={selectedDate}
+              onDateChange={(newD) => {
+                setSelectedDate(newD);
+                fetchDailySummary(newD);
+              }}
+            />
+
             {/* Daily Macro Budget & Rings */}
             <MacroRings summary={dailySummary} />
 
@@ -433,10 +520,16 @@ export default function App() {
               <MealTimeline
                 meals={dailySummary?.meals || []}
                 onDeleteMeal={handleDeleteMeal}
+                onEditMeal={handleEditMeal}
+                onAddMeal={handleAddMeal}
+                isToday={selectedDate === getTodayStr()}
               />
               <WorkoutTimeline
                 workouts={dailySummary?.workouts || []}
                 onDeleteWorkout={handleDeleteWorkout}
+                onEditWorkout={handleEditWorkout}
+                onAddWorkout={handleAddWorkout}
+                isToday={selectedDate === getTodayStr()}
               />
             </div>
 
@@ -448,6 +541,16 @@ export default function App() {
           <ProgressCharts refreshTrigger={dailySummary?.meals?.length || 0} />
         )}
       </main>
+
+      {/* Manual / Edit Entry Modal */}
+      <EditLogModal
+        isOpen={editModalState.isOpen}
+        mode={editModalState.mode}
+        initialData={editModalState.data}
+        selectedDate={selectedDate}
+        onClose={() => setEditModalState(prev => ({ ...prev, isOpen: false }))}
+        onSave={handleSaveEdit}
+      />
 
       {/* User Goals & Preference Settings Modal */}
       {showSettings && (

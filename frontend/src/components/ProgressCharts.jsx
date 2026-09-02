@@ -66,9 +66,9 @@ export default function ProgressCharts({ refreshTrigger = 0 }) {
           <div 
             className="p-2.5 rounded-xl border flex items-center justify-center"
             style={{ 
-              backgroundColor: 'rgba(56, 189, 248, 0.15)', 
-              borderColor: 'var(--color-protein)',
-              color: 'var(--color-protein)' 
+              backgroundColor: 'var(--accent-glow)', 
+              borderColor: 'var(--accent-primary)',
+              color: 'var(--accent-primary)' 
             }}
           >
             <BarChart2 className="w-5 h-5" />
@@ -205,7 +205,7 @@ export default function ProgressCharts({ refreshTrigger = 0 }) {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-base font-bold flex items-center gap-2" style={{ color: 'var(--text-main)' }}>
-                <BarChart2 className="w-5 h-5" style={{ color: 'var(--color-protein)' }} />
+                <BarChart2 className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
                 Protein Consistency (g)
               </h3>
               <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
@@ -222,6 +222,7 @@ export default function ProgressCharts({ refreshTrigger = 0 }) {
                 <XAxis dataKey="day" stroke="var(--text-muted)" fontSize={11} tickLine={false} />
                 <YAxis stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
                 <Tooltip
+                  cursor={{ fill: 'var(--accent-glow)', rx: 8, ry: 8 }}
                   contentStyle={{
                     backgroundColor: 'var(--bg-card)',
                     borderColor: 'var(--border-card)',
@@ -234,13 +235,13 @@ export default function ProgressCharts({ refreshTrigger = 0 }) {
                 />
                 <ReferenceLine 
                   y={proteinTarget} 
-                  stroke="rgba(56, 189, 248, 0.6)" 
+                  stroke="var(--accent-primary)" 
                   strokeDasharray="4 4" 
-                  label={{ value: 'Target', fill: '#38bdf8', fontSize: 10, position: 'insideTopRight' }} 
+                  label={{ value: 'Target', fill: 'var(--accent-primary)', fontSize: 10, position: 'insideTopRight' }} 
                 />
                 <Bar 
                   dataKey="protein" 
-                  fill="var(--color-protein)" 
+                  fill="var(--accent-primary)" 
                   radius={[6, 6, 0, 0]} 
                 />
               </BarChart>
