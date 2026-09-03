@@ -194,6 +194,8 @@ export default function ProgressCharts({ refreshTrigger = 0 }) {
                   strokeWidth={3} 
                   fillOpacity={1} 
                   fill="url(#calColor)" 
+                  dot={{ r: 4.5, fill: 'var(--accent-primary)', stroke: '#FFFFFF', strokeWidth: 1.5 }}
+                  activeDot={{ r: 7, fill: 'var(--accent-primary)', stroke: '#FFFFFF', strokeWidth: 2 }}
                 />
               </AreaChart>
             </ResponsiveContainer>
