@@ -91,11 +91,11 @@ export default function ProgressCharts({ refreshTrigger = 0 }) {
           style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-card)' }}
         >
           <div 
-            className="p-2.5 rounded-xl border flex items-center justify-center"
+            className="p-2.5 rounded-xl border flex items-center justify-center transition-colors"
             style={{ 
-              backgroundColor: weeklyNetDeficit >= 0 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)', 
-              borderColor: weeklyNetDeficit >= 0 ? '#10B981' : '#F59E0B',
-              color: weeklyNetDeficit >= 0 ? '#10B981' : '#F59E0B' 
+              backgroundColor: weeklyNetDeficit >= 0 ? 'var(--accent-glow)' : 'rgba(245, 158, 11, 0.15)', 
+              borderColor: weeklyNetDeficit >= 0 ? 'var(--accent-primary)' : '#F59E0B',
+              color: weeklyNetDeficit >= 0 ? 'var(--accent-primary)' : '#F59E0B' 
             }}
           >
             {weeklyNetDeficit >= 0 ? <TrendingDown className="w-5 h-5" /> : <TrendingUp className="w-5 h-5" />}
@@ -115,11 +115,11 @@ export default function ProgressCharts({ refreshTrigger = 0 }) {
           style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-card)' }}
         >
           <div 
-            className="p-2.5 rounded-xl border flex items-center justify-center"
+            className="p-2.5 rounded-xl border flex items-center justify-center transition-colors"
             style={{ 
-              backgroundColor: 'rgba(56, 189, 248, 0.15)', 
-              borderColor: '#38BDF8',
-              color: '#38BDF8' 
+              backgroundColor: 'var(--accent-glow)', 
+              borderColor: 'var(--accent-primary)',
+              color: 'var(--accent-primary)' 
             }}
           >
             <Scale className="w-5 h-5" />
@@ -183,9 +183,9 @@ export default function ProgressCharts({ refreshTrigger = 0 }) {
                 />
                 <ReferenceLine 
                   y={calorieTarget} 
-                  stroke="rgba(239, 68, 68, 0.6)" 
+                  stroke="var(--accent-primary)" 
                   strokeDasharray="4 4" 
-                  label={{ value: 'Target', fill: '#ef4444', fontSize: 10, position: 'insideTopRight' }} 
+                  label={{ value: 'Target', fill: 'var(--accent-primary)', fontSize: 10, position: 'insideTopRight' }} 
                 />
                 <Area 
                   type="monotone" 
@@ -262,7 +262,7 @@ export default function ProgressCharts({ refreshTrigger = 0 }) {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
             <div>
               <div className="flex items-center gap-2">
-                <TrendingDown className="w-5 h-5 text-emerald-400" />
+                <TrendingDown className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
                 <h3 className="text-base font-bold text-white tracking-tight">
                   Calorie Deficit vs TDEE Baseline
                 </h3>
@@ -278,8 +278,8 @@ export default function ProgressCharts({ refreshTrigger = 0 }) {
               <span className="flex items-center gap-1.5 text-sky-400">
                 <span className="w-2.5 h-1 bg-sky-400 rounded-full"></span> TDEE Baseline
               </span>
-              <span className="flex items-center gap-1.5 text-emerald-400">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Deficit Gap
+              <span className="flex items-center gap-1.5" style={{ color: 'var(--accent-primary)' }}>
+                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: 'var(--accent-primary)' }}></span> Deficit Gap
               </span>
             </div>
           </div>
