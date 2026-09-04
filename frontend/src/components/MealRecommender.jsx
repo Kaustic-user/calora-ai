@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ChefHat, Plus, Check, Clock, Sparkles, Loader2, Zap, Flame, Leaf } from 'lucide-react';
 
 const FILTERS = [
@@ -9,30 +9,58 @@ const FILTERS = [
 ];
 
 export default function MealRecommender({ onQuickLog }) {
-  const [recommendations, setRecommendations] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [activeFilter, setActiveFilter] = useState('');
   const [loggingId, setLoggingId] = useState(null);
 
-  const fetchRecommendations = async (filterVal = activeFilter) => {
-    setLoading(true);
+  // Tab-isolated state map: each tab has its own items, loading, and hasGenerated status
+  const [tabData, setTabData] = useState({
+    '': { items: [], loading: false, hasGenerated: false },
+    'quick': { items: [], loading: false, hasGenerated: false },
+    'high_protein': { items: [], loading: false, hasGenerated: false },
+    'light': { items: [], loading: false, hasGenerated: false },
+  });
+
+  const currentTab = tabData[activeFilter] || { items: [], loading: false, hasGenerated: false };
+  const currentFilterObj = FILTERS.find(f => f.id === activeFilter) || FILTERS[0];
+
+  const fetchRecommendationsForTab = async (filterId) => {
+    // Set loading for this specific tab only
+    setTabData(prev => ({
+      ...prev,
+      [filterId]: {
+        ...(prev[filterId] || { items: [] }),
+        loading: true,
+        hasGenerated: true
+      }
+    }));
+
     try {
-      const url = filterVal 
-        ? `/api/recommendations/dinner?filter=${encodeURIComponent(filterVal)}`
+      const url = filterId 
+        ? `/api/recommendations/dinner?filter=${encodeURIComponent(filterId)}`
         : '/api/recommendations/dinner';
       const res = await fetch(url);
       const data = await res.json();
-      setRecommendations(data);
+      
+      setTabData(prev => ({
+        ...prev,
+        [filterId]: {
+          items: Array.isArray(data) ? data : [],
+          loading: false,
+          hasGenerated: true
+        }
+      }));
     } catch (err) {
-      console.error('Failed to fetch recommendations:', err);
-    } finally {
-      setLoading(false);
+      console.error(`Failed to fetch recommendations for tab ${filterId}:`, err);
+      setTabData(prev => ({
+        ...prev,
+        [filterId]: {
+          items: prev[filterId]?.items || [],
+          loading: false,
+          hasGenerated: true
+        }
+      }));
     }
   };
-
-  useEffect(() => {
-    fetchRecommendations(activeFilter);
-  }, [activeFilter]);
 
   const handleQuickLog = async (title, idx) => {
     setLoggingId(idx);
@@ -60,23 +88,26 @@ export default function MealRecommender({ onQuickLog }) {
           </p>
         </div>
 
-        <button
-          onClick={() => fetchRecommendations(activeFilter)}
-          disabled={loading}
-          className="text-xs hover:text-white transition-colors flex items-center gap-1.5 font-medium px-3 py-1.5 rounded-xl border self-start sm:self-auto"
-          style={{ 
-            backgroundColor: 'var(--bg-card-subtle)',
-            borderColor: 'var(--border-card)',
-            color: 'var(--accent-primary)' 
-          }}
-        >
-          {loading ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-          ) : (
-            <Sparkles className="w-3.5 h-3.5" />
-          )}
-          {loading ? 'Synthesizing...' : 'Regenerate AI Ideas'}
-        </button>
+        {/* Regenerate Button in header if current tab already generated ideas */}
+        {currentTab.hasGenerated && (
+          <button
+            onClick={() => fetchRecommendationsForTab(activeFilter)}
+            disabled={currentTab.loading}
+            className="text-xs hover:text-white transition-all flex items-center gap-1.5 font-bold px-3.5 py-1.5 rounded-xl border self-start sm:self-auto shadow-sm hover:scale-102 active:scale-95"
+            style={{ 
+              backgroundColor: 'var(--bg-card-subtle)',
+              borderColor: 'var(--border-card)',
+              color: 'var(--accent-primary)' 
+            }}
+          >
+            {currentTab.loading ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Sparkles className="w-3.5 h-3.5" />
+            )}
+            {currentTab.loading ? 'Synthesizing...' : 'Regenerate Ideas'}
+          </button>
+        )}
       </div>
 
       {/* Filter Selector Pills */}
@@ -84,39 +115,76 @@ export default function MealRecommender({ onQuickLog }) {
         {FILTERS.map((f) => {
           const Icon = f.icon;
           const isActive = activeFilter === f.id;
+          const isTabLoading = tabData[f.id]?.loading;
+          const isTabGenerated = tabData[f.id]?.hasGenerated;
+
           return (
             <button
               key={f.id}
               onClick={() => setActiveFilter(f.id)}
-              className="text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all flex items-center gap-1.5"
+              className="text-xs font-semibold px-3 py-1.5 rounded-xl border transition-all flex items-center gap-1.5 relative"
               style={{
                 backgroundColor: isActive ? 'var(--accent-primary)' : 'var(--bg-card-subtle)',
                 borderColor: isActive ? 'var(--accent-primary)' : 'var(--border-card)',
                 color: isActive ? '#FFFFFF' : 'var(--text-muted)'
               }}
             >
-              <Icon className="w-3.5 h-3.5" />
+              {isTabLoading ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Icon className="w-3.5 h-3.5" />
+              )}
               {f.label}
+              {/* Subtle green indicator if tab has cached generated results */}
+              {!isTabLoading && isTabGenerated && !isActive && (
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 ml-0.5" />
+              )}
             </button>
           );
         })}
       </div>
 
-      {/* Content Area */}
-      {loading ? (
-        <div className="py-12 flex flex-col items-center justify-center gap-3 text-center">
+      {/* Content Area for Active Tab */}
+      {currentTab.loading ? (
+        <div className="py-12 flex flex-col items-center justify-center gap-3 text-center animate-fade-in">
           <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--accent-primary)' }} />
           <p className="text-xs font-medium text-slate-400">
-            Calculating optimal ingredient portions for your macro budget...
+            Synthesizing <span className="text-white font-bold">{currentFilterObj.label}</span> recipes for your remaining macros...
           </p>
         </div>
-      ) : recommendations.length === 0 ? (
+      ) : !currentTab.hasGenerated ? (
+        <div 
+          className="py-10 px-6 text-center rounded-2xl border flex flex-col items-center justify-center gap-3 transition-all animate-fade-in"
+          style={{ backgroundColor: 'var(--bg-card-subtle)', borderColor: 'var(--border-card)' }}
+        >
+          <div 
+            className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg mb-1"
+            style={{ backgroundColor: 'var(--accent-glow)', color: 'var(--accent-primary)', border: '1px solid var(--accent-primary)' }}
+          >
+            <currentFilterObj.icon className="w-6 h-6" />
+          </div>
+          <h4 className="text-sm font-bold text-white tracking-tight">
+            Generate {currentFilterObj.label} Ideas
+          </h4>
+          <p className="text-xs text-slate-400 max-w-md leading-relaxed">
+            Click below to calculate precision recipes matching your dietary preference and remaining calories.
+          </p>
+          <button
+            onClick={() => fetchRecommendationsForTab(activeFilter)}
+            className="mt-2 flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white rounded-xl shadow-lg transition-all hover:scale-105 active:scale-95"
+            style={{ backgroundColor: 'var(--accent-primary)' }}
+          >
+            <Sparkles className="w-4 h-4" />
+            Generate {currentFilterObj.label} Ideas
+          </button>
+        </div>
+      ) : currentTab.items.length === 0 ? (
         <div className="py-8 text-center text-xs text-slate-400">
-          No meal suggestions available. Tap regenerate to generate new ideas!
+          No meal suggestions returned for {currentFilterObj.label}. Click Regenerate Ideas to try again!
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {recommendations.map((rec, idx) => (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-fade-in">
+          {currentTab.items.map((rec, idx) => (
             <div
               key={idx}
               className="border hover:border-slate-600 rounded-2xl p-4 flex flex-col justify-between transition-all group hover:shadow-lg"

@@ -61,7 +61,12 @@ export default function WorkoutTimeline({ workouts, onDeleteWorkout, onEditWorko
         {onAddWorkout && (
           <button
             onClick={onAddWorkout}
-            className="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white border border-slate-700/60 bg-slate-900/60 flex items-center gap-1.5 transition-all shadow-sm hover:border-slate-500"
+            className="px-3 py-1.5 rounded-xl text-xs font-bold border flex items-center gap-1.5 transition-all shadow-sm hover:scale-102 active:scale-95"
+            style={{ 
+              backgroundColor: 'var(--bg-card)', 
+              borderColor: 'var(--border-card)', 
+              color: 'var(--text-main)' 
+            }}
           >
             <Plus className="w-3.5 h-3.5" style={{ color: 'var(--accent-primary)' }} />
             <span>Add Workout</span>

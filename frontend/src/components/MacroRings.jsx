@@ -205,17 +205,17 @@ export default function MacroRings({ summary }) {
         className="lg:col-span-12 border rounded-3xl p-5 shadow-xl transition-all relative overflow-hidden"
         style={{ 
           backgroundColor: 'var(--bg-card)', 
-          borderColor: is_in_deficit ? 'rgba(16, 185, 129, 0.4)' : 'rgba(245, 158, 11, 0.4)' 
+          borderColor: 'var(--border-card)' 
         }}
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
           <div className="flex items-center gap-3">
             <div 
-              className="p-2.5 rounded-2xl border"
+              className="p-2.5 rounded-2xl border transition-colors"
               style={{ 
-                backgroundColor: is_in_deficit ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)', 
-                borderColor: is_in_deficit ? '#10B981' : '#F59E0B',
-                color: is_in_deficit ? '#10B981' : '#F59E0B' 
+                backgroundColor: is_in_deficit ? 'var(--accent-glow)' : 'rgba(245, 158, 11, 0.15)', 
+                borderColor: is_in_deficit ? 'var(--accent-primary)' : '#F59E0B',
+                color: is_in_deficit ? 'var(--accent-primary)' : '#F59E0B' 
               }}
             >
               {is_in_deficit ? <TrendingDown className="w-5 h-5" /> : <TrendingUp className="w-5 h-5" />}
@@ -227,14 +227,14 @@ export default function MacroRings({ summary }) {
                 </h4>
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
-                Maintenance TDEE (<strong className="text-slate-200">{Math.round(total_burn)} kcal</strong>) − Eaten (<strong className="text-slate-200">{Math.round(calories_consumed)} kcal</strong>) = <strong className={is_in_deficit ? 'text-emerald-400' : 'text-amber-400'}>{is_in_deficit ? `+${Math.round(calorie_deficit)} kcal Deficit` : `${Math.round(calorie_deficit)} kcal Surplus`}</strong>
+                Maintenance TDEE (<strong className="text-slate-200">{Math.round(total_burn)} kcal</strong>) − Eaten (<strong className="text-slate-200">{Math.round(calories_consumed)} kcal</strong>) = <strong style={{ color: is_in_deficit ? 'var(--accent-primary)' : '#F59E0B' }}>{is_in_deficit ? `+${Math.round(calorie_deficit)} kcal Deficit` : `${Math.round(calorie_deficit)} kcal Surplus`}</strong>
               </p>
             </div>
           </div>
           <div className="flex items-center gap-4 bg-slate-900/40 px-3.5 py-2 rounded-2xl border" style={{ borderColor: 'var(--border-card)' }}>
             <div>
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Goal Deficit</p>
-              <p className="text-sm font-extrabold text-emerald-400">+{target_deficit || 500} kcal</p>
+              <p className="text-sm font-extrabold" style={{ color: 'var(--accent-primary)' }}>+{target_deficit || 500} kcal</p>
             </div>
             <div className="h-7 w-px bg-slate-800"></div>
             <div>
@@ -252,14 +252,14 @@ export default function MacroRings({ summary }) {
             className="h-full rounded-full transition-all duration-700"
             style={{ 
               width: `${Math.min(100, Math.max(3, (Math.max(0, calorie_deficit) / (target_deficit || 500)) * 100))}%`,
-              backgroundColor: is_in_deficit ? '#10B981' : '#F59E0B'
+              backgroundColor: is_in_deficit ? 'var(--accent-primary)' : '#F59E0B'
             }}
           ></div>
         </div>
         <div className="flex justify-between text-[11px] text-slate-400 font-medium mt-2">
           <span>0 kcal (Maintenance Baseline)</span>
           <span className="text-slate-300 font-semibold">Goal: +{target_deficit || 500} kcal</span>
-          <span className={is_in_deficit ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>
+          <span className="font-bold" style={{ color: is_in_deficit ? 'var(--accent-primary)' : '#F59E0B' }}>
             {Math.round(calorie_deficit)} / {target_deficit || 500} kcal ({Math.round((calorie_deficit / (target_deficit || 500)) * 100)}%)
           </span>
         </div>
