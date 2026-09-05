@@ -159,6 +159,10 @@ export default function App() {
     // Immediately remove from screen so clarification banner is never stuck/lingering
     setActiveClarifications(remaining);
 
+    if (isFinal) {
+      setIsProcessing(true);
+    }
+
     try {
       const res = await fetch('/api/voice/resolve-clarification', {
         method: 'POST',
@@ -194,6 +198,10 @@ export default function App() {
       }
     } catch (err) {
       console.error('Error saving clarification preference:', err);
+    } finally {
+      if (isFinal) {
+        setIsProcessing(false);
+      }
     }
   };
 
@@ -203,6 +211,10 @@ export default function App() {
 
     // Immediately remove from screen so clarification banner is never stuck/lingering
     setActiveClarifications(remaining);
+
+    if (isFinal) {
+      setIsProcessing(true);
+    }
 
     try {
       const formData = new FormData();
@@ -239,6 +251,10 @@ export default function App() {
       }
     } catch (err) {
       console.error('Error processing spoken clarification:', err);
+    } finally {
+      if (isFinal) {
+        setIsProcessing(false);
+      }
     }
   };
 
