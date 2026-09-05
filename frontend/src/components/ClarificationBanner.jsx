@@ -10,7 +10,7 @@ export default function ClarificationBanner({
   onDismiss
 }) {
   const [recordingId, setRecordingId] = useState(null);
-  const [isUploading, setIsUploading] = useState(false);
+  const [savingIds, setSavingIds] = useState(new Set());
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
 
@@ -33,13 +33,17 @@ export default function ClarificationBanner({
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         stream.getTracks().forEach((track) => track.stop());
         setRecordingId(null);
-        setIsUploading(true);
+        setSavingIds((prev) => new Set(prev).add(clarificationId));
         try {
           if (onResolveVoice) {
             await onResolveVoice(clarificationId, audioBlob);
           }
         } finally {
-          setIsUploading(false);
+          setSavingIds((prev) => {
+            const next = new Set(prev);
+            next.delete(clarificationId);
+            return next;
+          });
         }
       };
 
@@ -122,6 +126,7 @@ export default function ClarificationBanner({
       <div className="space-y-3">
         {clarifications.map((item) => {
           const isThisRecording = recordingId === item.id;
+          const isThisSaving = savingIds.has(item.id);
           return (
             <div
               key={item.id}
@@ -140,7 +145,7 @@ export default function ClarificationBanner({
                 {item.options.map((opt, idx) => (
                   <button
                     key={idx}
-                    disabled={isThisRecording || isUploading}
+                    disabled={isThisRecording || isThisSaving}
                     onClick={() => onResolve && onResolve(item.id, opt)}
                     className="px-3.5 py-2 border text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-1.5 hover:scale-105 active:scale-95 text-white disabled:opacity-50"
                     style={{
@@ -157,7 +162,7 @@ export default function ClarificationBanner({
                 {/* Voice Clarification Microphone Button */}
                 <button
                   type="button"
-                  disabled={isUploading || (recordingId && !isThisRecording)}
+                  disabled={isThisSaving || (recordingId !== null && !isThisRecording)}
                   onClick={() => {
                     if (isThisRecording) {
                       stopVoiceClarification();
@@ -172,7 +177,7 @@ export default function ClarificationBanner({
                   }`}
                   title="Or speak your custom preparation details"
                 >
-                  {isUploading ? (
+                  {isThisSaving ? (
                     <>
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
                       <span>Saving...</span>

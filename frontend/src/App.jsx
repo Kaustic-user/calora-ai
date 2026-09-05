@@ -153,7 +153,6 @@ export default function App() {
   };
 
   const handleResolveClarification = async (clarificationId, chosenOption) => {
-    setIsProcessing(true);
     const remaining = activeClarifications.filter((c) => c.id !== clarificationId);
     const isFinal = remaining.length === 0;
 
@@ -195,13 +194,10 @@ export default function App() {
       }
     } catch (err) {
       console.error('Error saving clarification preference:', err);
-    } finally {
-      setIsProcessing(false);
     }
   };
 
   const handleResolveClarificationVoice = async (clarificationId, audioBlob) => {
-    setIsProcessing(true);
     const remaining = activeClarifications.filter((c) => c.id !== clarificationId);
     const isFinal = remaining.length === 0;
 
@@ -243,8 +239,6 @@ export default function App() {
       }
     } catch (err) {
       console.error('Error processing spoken clarification:', err);
-    } finally {
-      setIsProcessing(false);
     }
   };
 
