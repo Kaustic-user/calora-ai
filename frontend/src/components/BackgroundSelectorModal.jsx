@@ -42,14 +42,14 @@ export const BACKGROUNDS = [
 export default function BackgroundSelectorModal({ currentBg, onSelectBg, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-      <div 
+      <div
         className="w-full max-w-xl rounded-3xl p-6 shadow-2xl border relative overflow-hidden transition-all"
         style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-card)' }}
       >
         {/* Header */}
         <div className="flex justify-between items-center mb-5">
           <div className="flex items-center gap-2.5">
-            <div 
+            <div
               className="p-2 rounded-xl text-white shadow-md"
               style={{ backgroundColor: 'var(--accent-primary)' }}
             >
@@ -78,12 +78,12 @@ export default function BackgroundSelectorModal({ currentBg, onSelectBg, onClose
                 key={bg.id}
                 onClick={() => onSelectBg(bg.id)}
                 className={`w-full p-4 rounded-2xl border text-left transition-all duration-200 flex items-center justify-between group ${
-                  isSelected 
-                    ? 'ring-2 shadow-lg' 
+                  isSelected
+                    ? 'ring-2 shadow-lg'
                     : 'hover:border-slate-500 opacity-85 hover:opacity-100'
                 }`}
-                style={{ 
-                  backgroundColor: 'var(--bg-card-subtle)', 
+                style={{
+                  backgroundColor: 'var(--bg-card-subtle)',
                   borderColor: isSelected ? 'var(--accent-primary)' : 'var(--border-card)',
                   ringColor: isSelected ? 'var(--accent-primary)' : undefined
                 }}
@@ -95,12 +95,12 @@ export default function BackgroundSelectorModal({ currentBg, onSelectBg, onClose
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-white group-hover:text-slate-100">{bg.name}</span>
-                      <span 
+                      <span
                         className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border"
-                        style={{ 
-                          backgroundColor: 'var(--accent-glow)', 
-                          color: 'var(--accent-primary)', 
-                          borderColor: 'var(--accent-primary)' 
+                        style={{
+                          backgroundColor: 'var(--accent-glow)',
+                          color: 'var(--accent-primary)',
+                          borderColor: 'var(--accent-primary)'
                         }}
                       >
                         {bg.badge}
@@ -110,13 +110,13 @@ export default function BackgroundSelectorModal({ currentBg, onSelectBg, onClose
                   </div>
                 </div>
 
-                <div 
+                <div
                   className={`w-6 h-6 rounded-full flex items-center justify-center border shrink-0 ml-3 transition-all ${
                     isSelected ? 'text-black' : 'border-slate-700 bg-slate-900'
                   }`}
-                  style={{ 
-                    backgroundColor: isSelected ? 'var(--accent-primary)' : undefined, 
-                    borderColor: isSelected ? 'var(--accent-primary)' : undefined 
+                  style={{
+                    backgroundColor: isSelected ? 'var(--accent-primary)' : undefined,
+                    borderColor: isSelected ? 'var(--accent-primary)' : undefined
                   }}
                 >
                   {isSelected && <Check className="w-4 h-4 stroke-[3]" />}

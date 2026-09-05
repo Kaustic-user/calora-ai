@@ -198,7 +198,7 @@ export default function DateNavigator({ selectedDate, onDateChange }) {
   };
 
   return (
-    <div 
+    <div
       className={`border rounded-2xl p-3 sm:p-4 shadow-lg flex flex-wrap items-center justify-between gap-3 transition-all duration-300 backdrop-blur-md relative ${isOpen ? 'z-30' : 'z-10'}`}
       style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-card)' }}
     >
@@ -207,8 +207,8 @@ export default function DateNavigator({ selectedDate, onDateChange }) {
         <button
           onClick={() => onDateChange(todayStr)}
           className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-            isToday 
-              ? 'text-white shadow-md' 
+            isToday
+              ? 'text-white shadow-md'
               : 'text-slate-400 hover:text-white border hover:bg-slate-800/50'
           }`}
           style={isToday ? { backgroundColor: 'var(--accent-primary)', color: '#000000' } : { borderColor: 'var(--border-card)', backgroundColor: 'var(--bg-card-subtle)' }}
@@ -218,8 +218,8 @@ export default function DateNavigator({ selectedDate, onDateChange }) {
         <button
           onClick={() => onDateChange(yesterdayStr)}
           className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-            isYesterday 
-              ? 'text-white shadow-md' 
+            isYesterday
+              ? 'text-white shadow-md'
               : 'text-slate-400 hover:text-white border hover:bg-slate-800/50'
           }`}
           style={isYesterday ? { backgroundColor: 'var(--accent-primary)', color: '#000000' } : { borderColor: 'var(--border-card)', backgroundColor: 'var(--bg-card-subtle)' }}
@@ -229,7 +229,7 @@ export default function DateNavigator({ selectedDate, onDateChange }) {
       </div>
 
       {/* Center: Custom Interactive Calendar Trigger & Day Switcher */}
-      <div 
+      <div
         ref={calendarRef}
         className="relative z-30 flex items-center gap-1 sm:gap-2 border px-2 py-1 rounded-xl shadow-inner transition-all"
         style={{ backgroundColor: 'var(--bg-card-subtle)', borderColor: 'var(--border-card)' }}
@@ -264,10 +264,10 @@ export default function DateNavigator({ selectedDate, onDateChange }) {
 
         {/* --- Custom Futuristic Glassmorphic Calendar Popover --- */}
         {isOpen && (
-          <div 
+          <div
             className="absolute top-full right-0 mt-2 z-50 w-80 sm:w-88 rounded-3xl p-5 shadow-2xl border backdrop-blur-2xl animate-fade-in transition-all"
-            style={{ 
-              backgroundColor: 'var(--bg-card)', 
+            style={{
+              backgroundColor: 'var(--bg-card)',
               borderColor: 'var(--border-card)',
               boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 20px var(--accent-glow)'
             }}
@@ -343,22 +343,22 @@ export default function DateNavigator({ selectedDate, onDateChange }) {
                     }`}
                     style={
                       isCellSelected
-                        ? { 
-                            backgroundColor: 'var(--accent-primary)', 
+                        ? {
+                            backgroundColor: 'var(--accent-primary)',
                             color: '#000000',
-                            boxShadow: '0 0 12px var(--accent-glow)' 
+                            boxShadow: '0 0 12px var(--accent-glow)'
                           }
                         : isCellToday
-                          ? { 
+                          ? {
                               border: '1px solid var(--accent-primary)',
-                              backgroundColor: 'var(--accent-glow)' 
+                              backgroundColor: 'var(--accent-glow)'
                             }
                           : {}
                     }
                   >
                     <span>{cell.dayNum}</span>
                     {isCellToday && !isCellSelected && (
-                      <span 
+                      <span
                         className="w-1 h-1 rounded-full absolute bottom-1"
                         style={{ backgroundColor: 'var(--accent-primary)' }}
                       />

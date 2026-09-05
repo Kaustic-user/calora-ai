@@ -7,8 +7,8 @@ logger = logging.getLogger("CaloraAI.ClarificationAgent")
 
 class ClarificationAgent:
     def check_ambiguities(
-        self, 
-        transcript: str, 
+        self,
+        transcript: str,
         parsed_meal: Optional[MealLogCreate] = None,
         parsed_workout: Optional[WorkoutLogCreate] = None,
         user_memory: Optional[Dict[str, Any]] = None
@@ -18,7 +18,7 @@ class ClarificationAgent:
         Detects high-impact ambiguous variables (>15% calorie delta) and generates
         actionable 1-tap confirmation prompts.
         """
-        
+
         memory_str = ""
         if user_memory and user_memory.get("habits"):
             memory_str = f"Known user habits/preferences: {', '.join(user_memory['habits'])}."

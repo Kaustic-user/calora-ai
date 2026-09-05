@@ -79,10 +79,10 @@ def run_benchmark():
 
     for idx, (text, expected_intent) in enumerate(TEST_CASES, start=1):
         t0 = time.perf_counter()
-        
+
         # Check if local fast-path handles it
         fast_res = intent_agent.classify_fast_path(text)
-        
+
         if fast_res is not None:
             actual_intent, conf = fast_res
             route_name = "⚡ FAST-PATH"
@@ -91,11 +91,11 @@ def run_benchmark():
             # LLM Path with automatic retry for free-tier rate limits (429)
             route_name = "🤖 LLM TIER-2"
             is_fast = False
-            
+
             # Pacing to avoid Google free-tier bursts
             time.sleep(1.5)
             actual_intent = intent_agent.parse_intent(text)
-            
+
             # If rate-limited on free tier, retry once after a short 3s pause
             if actual_intent == "unknown" and expected_intent != "unknown":
                 time.sleep(3.0)

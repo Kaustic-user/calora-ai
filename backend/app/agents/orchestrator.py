@@ -37,7 +37,7 @@ def resolve_target_date(text: str) -> date:
         return today - timedelta(days=2)
     elif "yesterday" in text_lower or "last night" in text_lower or "last evening" in text_lower:
         return today - timedelta(days=1)
-    
+
     # Check "X days ago"
     days_ago_match = re.search(r'(\d+)\s+days?\s+ago', text_lower)
     if days_ago_match:
@@ -78,9 +78,9 @@ def resolve_target_date(text: str) -> date:
 
 class MasterOrchestratorAgent:
     def process_voice_transcript(
-        self, 
-        transcript: str, 
-        db: Session, 
+        self,
+        transcript: str,
+        db: Session,
         user_id: int = 1,
         auto_save: bool = True
     ) -> AgentProcessResponse:
@@ -113,7 +113,7 @@ class MasterOrchestratorAgent:
         # 1. Intent Detection
         intent = intent_agent.parse_intent(transcript)
         logger.info(f"[IntentAgent] Resolved intent: \"{intent}\" for target_date={target_date}")
-        
+
         detected_meals: List[MealLogCreate] = []
         detected_meal: Optional[MealLogCreate] = None
         detected_workout: Optional[WorkoutLogCreate] = None
@@ -157,7 +157,7 @@ class MasterOrchestratorAgent:
         # 3. Voice Mutation & Editing Handling (e.g. "Update yesterday's lunch: change 2 rotis to 3 rotis and remove dal")
         if intent == "mutation":
             logger.info(f"[Orchestrator] Executing voice mutation for date={target_date}")
-            
+
             # Prompt Gemini to structure the mutation action
             system_instruction = (
                 "You are an AI Database Mutation Engine for Calora AI. "
@@ -178,7 +178,7 @@ class MasterOrchestratorAgent:
                 t_lower = transcript.lower()
                 action_fallback = "delete" if any(w in t_lower for w in ["delete", "remove", "cancel"]) else "update"
                 entity_fallback = "workout" if any(w in t_lower for w in ["workout", "exercise", "running", "jog", "walk", "gym", "cardio"]) else "meal"
-                
+
                 if "breakfast" in t_lower:
                     m_type_fallback = "breakfast"
                 elif "dinner" in t_lower or "night" in t_lower:
@@ -187,7 +187,7 @@ class MasterOrchestratorAgent:
                     m_type_fallback = "snack"
                 else:
                     m_type_fallback = "lunch"
-                
+
                 mutation_info = {
                     "action": action_fallback,
                     "entity_type": entity_fallback,
@@ -293,7 +293,7 @@ class MasterOrchestratorAgent:
                         f"[NutritionAgent] Meal #{idx} parsed: title=\"{dm.meal_title}\", "
                         f"date={target_date}, calories={dm.calories} kcal, protein={dm.protein_g}g"
                     )
-            
+
             # Single-Pass Clarification Resolution
             if inline_clarifications:
                 clarifications.extend(inline_clarifications)

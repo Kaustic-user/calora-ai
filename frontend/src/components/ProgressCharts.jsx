@@ -38,16 +38,16 @@ export default function ProgressCharts({ refreshTrigger = 0 }) {
       {/* 4 Weekly Health Metric Badges */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Weekly Avg Intake */}
-        <div 
+        <div
           className="border rounded-2xl p-4 shadow-lg flex items-center gap-3 transition-all"
           style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-card)' }}
         >
-          <div 
+          <div
             className="p-2.5 rounded-xl border flex items-center justify-center"
-            style={{ 
-              backgroundColor: 'var(--accent-glow)', 
+            style={{
+              backgroundColor: 'var(--accent-glow)',
               borderColor: 'var(--accent-primary)',
-              color: 'var(--accent-primary)' 
+              color: 'var(--accent-primary)'
             }}
           >
             <Flame className="w-5 h-5" />
@@ -62,16 +62,16 @@ export default function ProgressCharts({ refreshTrigger = 0 }) {
         </div>
 
         {/* Weekly Avg Protein */}
-        <div 
+        <div
           className="border rounded-2xl p-4 shadow-lg flex items-center gap-3 transition-all"
           style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-card)' }}
         >
-          <div 
+          <div
             className="p-2.5 rounded-xl border flex items-center justify-center"
-            style={{ 
-              backgroundColor: 'var(--accent-glow)', 
+            style={{
+              backgroundColor: 'var(--accent-glow)',
               borderColor: 'var(--accent-primary)',
-              color: 'var(--accent-primary)' 
+              color: 'var(--accent-primary)'
             }}
           >
             <BarChart2 className="w-5 h-5" />
@@ -86,16 +86,16 @@ export default function ProgressCharts({ refreshTrigger = 0 }) {
         </div>
 
         {/* 7-Day Net Deficit */}
-        <div 
+        <div
           className="border rounded-2xl p-4 shadow-lg flex items-center gap-3 transition-all"
           style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-card)' }}
         >
-          <div 
+          <div
             className="p-2.5 rounded-xl border flex items-center justify-center transition-colors"
-            style={{ 
-              backgroundColor: weeklyNetDeficit >= 0 ? 'var(--accent-glow)' : 'rgba(245, 158, 11, 0.15)', 
+            style={{
+              backgroundColor: weeklyNetDeficit >= 0 ? 'var(--accent-glow)' : 'rgba(245, 158, 11, 0.15)',
               borderColor: weeklyNetDeficit >= 0 ? 'var(--accent-primary)' : '#F59E0B',
-              color: weeklyNetDeficit >= 0 ? 'var(--accent-primary)' : '#F59E0B' 
+              color: weeklyNetDeficit >= 0 ? 'var(--accent-primary)' : '#F59E0B'
             }}
           >
             {weeklyNetDeficit >= 0 ? <TrendingDown className="w-5 h-5" /> : <TrendingUp className="w-5 h-5" />}
@@ -110,16 +110,16 @@ export default function ProgressCharts({ refreshTrigger = 0 }) {
         </div>
 
         {/* Projected Fat Loss */}
-        <div 
+        <div
           className="border rounded-2xl p-4 shadow-lg flex items-center gap-3 transition-all"
           style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-card)' }}
         >
-          <div 
+          <div
             className="p-2.5 rounded-xl border flex items-center justify-center transition-colors"
-            style={{ 
-              backgroundColor: 'var(--accent-glow)', 
+            style={{
+              backgroundColor: 'var(--accent-glow)',
               borderColor: 'var(--accent-primary)',
-              color: 'var(--accent-primary)' 
+              color: 'var(--accent-primary)'
             }}
           >
             <Scale className="w-5 h-5" />
@@ -137,7 +137,7 @@ export default function ProgressCharts({ refreshTrigger = 0 }) {
       {/* 3 Detailed Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Calorie Intake vs Burn Chart */}
-        <div 
+        <div
           className="border rounded-3xl p-6 shadow-xl transition-all relative overflow-hidden"
           style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-card)' }}
         >
@@ -181,19 +181,19 @@ export default function ProgressCharts({ refreshTrigger = 0 }) {
                     return [val, name];
                   }}
                 />
-                <ReferenceLine 
-                  y={calorieTarget} 
-                  stroke="var(--accent-primary)" 
-                  strokeDasharray="4 4" 
-                  label={{ value: 'Target', fill: 'var(--accent-primary)', fontSize: 10, position: 'insideTopRight' }} 
+                <ReferenceLine
+                  y={calorieTarget}
+                  stroke="var(--accent-primary)"
+                  strokeDasharray="4 4"
+                  label={{ value: 'Target', fill: 'var(--accent-primary)', fontSize: 10, position: 'insideTopRight' }}
                 />
-                <Area 
-                  type="monotone" 
-                  dataKey="calories" 
-                  stroke="var(--accent-primary)" 
-                  strokeWidth={3} 
-                  fillOpacity={1} 
-                  fill="url(#calColor)" 
+                <Area
+                  type="monotone"
+                  dataKey="calories"
+                  stroke="var(--accent-primary)"
+                  strokeWidth={3}
+                  fillOpacity={1}
+                  fill="url(#calColor)"
                   dot={{ r: 4.5, fill: 'var(--accent-primary)', stroke: '#FFFFFF', strokeWidth: 1.5 }}
                   activeDot={{ r: 7, fill: 'var(--accent-primary)', stroke: '#FFFFFF', strokeWidth: 2 }}
                 />
@@ -203,7 +203,7 @@ export default function ProgressCharts({ refreshTrigger = 0 }) {
         </div>
 
         {/* Protein Intake Consistency Chart */}
-        <div 
+        <div
           className="border rounded-3xl p-6 shadow-xl transition-all relative overflow-hidden"
           style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-card)' }}
         >
@@ -238,16 +238,16 @@ export default function ProgressCharts({ refreshTrigger = 0 }) {
                   labelStyle={{ color: 'var(--text-main)', fontWeight: 'bold', marginBottom: '4px' }}
                   formatter={(val) => [`${val}g`, 'Protein Consumed']}
                 />
-                <ReferenceLine 
-                  y={proteinTarget} 
-                  stroke="var(--accent-primary)" 
-                  strokeDasharray="4 4" 
-                  label={{ value: 'Target', fill: 'var(--accent-primary)', fontSize: 10, position: 'insideTopRight' }} 
+                <ReferenceLine
+                  y={proteinTarget}
+                  stroke="var(--accent-primary)"
+                  strokeDasharray="4 4"
+                  label={{ value: 'Target', fill: 'var(--accent-primary)', fontSize: 10, position: 'insideTopRight' }}
                 />
-                <Bar 
-                  dataKey="protein" 
-                  fill="var(--accent-primary)" 
-                  radius={[6, 6, 0, 0]} 
+                <Bar
+                  dataKey="protein"
+                  fill="var(--accent-primary)"
+                  radius={[6, 6, 0, 0]}
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -255,7 +255,7 @@ export default function ProgressCharts({ refreshTrigger = 0 }) {
         </div>
 
         {/* 7-Day Calorie Intake vs TDEE Baseline & Deficit Gap Chart */}
-        <div 
+        <div
           className="lg:col-span-2 border rounded-3xl p-6 shadow-xl transition-all relative overflow-hidden"
           style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-card)' }}
         >
@@ -399,11 +399,11 @@ export default function ProgressCharts({ refreshTrigger = 0 }) {
                         const isDeficit = deficit >= 0;
 
                         return (
-                          <div 
+                          <div
                             className="p-3.5 rounded-2xl shadow-2xl border backdrop-blur-md min-w-[210px] space-y-2.5 animate-fade-in"
-                            style={{ 
-                              backgroundColor: 'var(--bg-card)', 
-                              borderColor: isDeficit ? 'rgba(16, 185, 129, 0.4)' : 'rgba(245, 158, 11, 0.4)' 
+                            style={{
+                              backgroundColor: 'var(--bg-card)',
+                              borderColor: isDeficit ? 'rgba(16, 185, 129, 0.4)' : 'rgba(245, 158, 11, 0.4)'
                             }}
                           >
                             <div className="flex justify-between items-center border-b pb-1.5" style={{ borderColor: 'var(--border-card)' }}>

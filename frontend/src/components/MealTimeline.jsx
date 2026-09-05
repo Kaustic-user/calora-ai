@@ -4,16 +4,16 @@ import { Utensils, Trash2, Edit2, Clock, CheckCircle2, AlertCircle, Plus } from 
 export default function MealTimeline({ meals, onDeleteMeal, onEditMeal, onAddMeal, isToday = true }) {
   if (!meals || meals.length === 0) {
     return (
-      <div 
+      <div
         className="border rounded-3xl p-8 text-center shadow-xl transition-all"
         style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-card)' }}
       >
-        <div 
+        <div
           className="w-12 h-12 rounded-2xl border flex items-center justify-center mx-auto mb-3"
-          style={{ 
-            backgroundColor: 'var(--accent-glow)', 
+          style={{
+            backgroundColor: 'var(--accent-glow)',
             borderColor: 'var(--accent-primary)',
-            color: 'var(--accent-primary)' 
+            color: 'var(--accent-primary)'
           }}
         >
           <Utensils className="w-6 h-6" />
@@ -61,10 +61,10 @@ export default function MealTimeline({ meals, onDeleteMeal, onEditMeal, onAddMea
           <button
             onClick={onAddMeal}
             className="px-3 py-1.5 rounded-xl text-xs font-bold border flex items-center gap-1.5 transition-all shadow-sm hover:scale-102 active:scale-95"
-            style={{ 
-              backgroundColor: 'var(--bg-card)', 
-              borderColor: 'var(--border-card)', 
-              color: 'var(--text-main)' 
+            style={{
+              backgroundColor: 'var(--bg-card)',
+              borderColor: 'var(--border-card)',
+              color: 'var(--text-main)'
             }}
           >
             <Plus className="w-3.5 h-3.5" style={{ color: 'var(--accent-primary)' }} />
@@ -126,8 +126,8 @@ export default function MealTimeline({ meals, onDeleteMeal, onEditMeal, onAddMea
               <div className="space-y-1.5 mb-4">
                 {meal.items &&
                   meal.items.map((item, idx) => (
-                    <div 
-                      key={idx} 
+                    <div
+                      key={idx}
                       className="flex justify-between items-center text-xs px-2.5 py-1.5 rounded-lg border"
                       style={{ backgroundColor: 'var(--bg-card-subtle)', borderColor: 'var(--border-card)' }}
                     >
@@ -151,7 +151,7 @@ export default function MealTimeline({ meals, onDeleteMeal, onEditMeal, onAddMea
             </div>
 
             {/* Macros Footer */}
-            <div 
+            <div
               className="grid grid-cols-4 gap-1.5 pt-3 border-t text-center text-xs"
               style={{ borderColor: 'var(--border-card)' }}
             >

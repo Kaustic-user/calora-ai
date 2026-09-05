@@ -22,13 +22,13 @@ class WorkoutAgent:
     }
 
     def parse_workout(
-        self, 
-        text: str, 
+        self,
+        text: str,
         user_weight_kg: float = 70.0,
         user_memory: Optional[Dict[str, Any]] = None
     ) -> Tuple[WorkoutLogCreate, List[ClarificationItem]]:
         """Parses exercise voice/text, calculates MET calories, and flags ambiguities (e.g. missing duration, intensity)"""
-        
+
         memory_str = ""
         if user_memory and user_memory.get("habits"):
             memory_str = f"Known user habits: {', '.join(user_memory['habits'])}."
@@ -84,7 +84,7 @@ class WorkoutAgent:
         else:
             # Fallback deterministic parsing
             text_lower = text.lower()
-            
+
             # Duration extraction
             dur_match = re.search(r'(\d+)\s*(?:min|mins|minute|minutes|hr|hrs|hour|hours)', text_lower)
             if dur_match:

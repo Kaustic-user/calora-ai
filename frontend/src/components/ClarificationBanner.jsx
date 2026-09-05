@@ -1,11 +1,11 @@
 import React, { useState, useRef } from 'react';
 import { Check, Sparkles, Mic, Square, Loader2, X } from 'lucide-react';
 
-export default function ClarificationBanner({ 
-  clarifications, 
-  pendingMeal, 
+export default function ClarificationBanner({
+  clarifications,
+  pendingMeal,
   pendingWorkout,
-  onResolve, 
+  onResolve,
   onResolveVoice,
   onDismiss
 }) {
@@ -65,22 +65,22 @@ export default function ClarificationBanner({
   };
 
   return (
-    <div 
+    <div
       className="border rounded-3xl p-5 shadow-2xl backdrop-blur-md animate-fade-in transition-all"
-      style={{ 
-        backgroundColor: 'var(--bg-card)', 
+      style={{
+        backgroundColor: 'var(--bg-card)',
         borderColor: 'var(--accent-primary)',
-        boxShadow: '0 8px 30px var(--accent-glow)' 
+        boxShadow: '0 8px 30px var(--accent-glow)'
       }}
     >
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <div 
+          <div
             className="p-1.5 rounded-xl border flex items-center justify-center"
-            style={{ 
-              backgroundColor: 'var(--accent-glow)', 
-              borderColor: 'var(--accent-primary)', 
-              color: 'var(--accent-primary)' 
+            style={{
+              backgroundColor: 'var(--accent-glow)',
+              borderColor: 'var(--accent-primary)',
+              color: 'var(--accent-primary)'
             }}
           >
             <Sparkles className="w-4 h-4 animate-pulse" />
@@ -97,12 +97,12 @@ export default function ClarificationBanner({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span 
+          <span
             className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full border"
-            style={{ 
-              backgroundColor: 'var(--accent-glow)', 
-              color: 'var(--accent-primary)', 
-              borderColor: 'var(--accent-primary)' 
+            style={{
+              backgroundColor: 'var(--accent-glow)',
+              color: 'var(--accent-primary)',
+              borderColor: 'var(--accent-primary)'
             }}
           >
             1-Tap or Speak
@@ -123,8 +123,8 @@ export default function ClarificationBanner({
         {clarifications.map((item) => {
           const isThisRecording = recordingId === item.id;
           return (
-            <div 
-              key={item.id} 
+            <div
+              key={item.id}
               className="border p-4 rounded-2xl transition-colors"
               style={{ backgroundColor: 'var(--bg-card-subtle)', borderColor: 'var(--border-card)' }}
             >
@@ -143,8 +143,8 @@ export default function ClarificationBanner({
                     disabled={isThisRecording || isUploading}
                     onClick={() => onResolve && onResolve(item.id, opt)}
                     className="px-3.5 py-2 border text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-1.5 hover:scale-105 active:scale-95 text-white disabled:opacity-50"
-                    style={{ 
-                      backgroundColor: idx === 0 ? 'var(--accent-primary)' : 'var(--bg-card)', 
+                    style={{
+                      backgroundColor: idx === 0 ? 'var(--accent-primary)' : 'var(--bg-card)',
                       borderColor: idx === 0 ? 'var(--accent-primary)' : 'var(--border-card)',
                       color: idx === 0 ? '#000000' : 'inherit'
                     }}
@@ -166,8 +166,8 @@ export default function ClarificationBanner({
                     }
                   }}
                   className={`px-3 py-2 border text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-1.5 hover:scale-105 active:scale-95 disabled:opacity-50 ${
-                    isThisRecording 
-                      ? 'bg-rose-600 border-rose-500 text-white animate-pulse' 
+                    isThisRecording
+                      ? 'bg-rose-600 border-rose-500 text-white animate-pulse'
                       : 'bg-slate-900 border-slate-700 text-slate-300 hover:border-emerald-500 hover:text-emerald-400'
                   }`}
                   title="Or speak your custom preparation details"

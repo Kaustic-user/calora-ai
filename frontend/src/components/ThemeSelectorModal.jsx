@@ -67,13 +67,13 @@ export const THEMES = [
 export default function ThemeSelectorModal({ currentTheme, onSelectTheme, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fade-in">
-      <div 
+      <div
         className="w-full max-w-xl rounded-3xl p-6 shadow-2xl border relative overflow-hidden transition-all"
         style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-card)' }}
       >
         <div className="flex justify-between items-center mb-5">
           <div className="flex items-center gap-2.5">
-            <div 
+            <div
               className="p-2 rounded-xl text-white shadow-md"
               style={{ backgroundColor: 'var(--accent-primary)' }}
             >
@@ -101,12 +101,12 @@ export default function ThemeSelectorModal({ currentTheme, onSelectTheme, onClos
                 key={theme.id}
                 onClick={() => onSelectTheme(theme.id)}
                 className={`w-full p-4 rounded-2xl border text-left transition-all duration-200 flex items-center justify-between group ${
-                  isSelected 
-                    ? 'ring-2 shadow-lg' 
+                  isSelected
+                    ? 'ring-2 shadow-lg'
                     : 'hover:border-slate-500 opacity-85 hover:opacity-100'
                 }`}
-                style={{ 
-                  backgroundColor: theme.card, 
+                style={{
+                  backgroundColor: theme.card,
                   borderColor: isSelected ? theme.primary : '#1E293B',
                   ringColor: theme.primary
                 }}
@@ -114,24 +114,24 @@ export default function ThemeSelectorModal({ currentTheme, onSelectTheme, onClos
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-bold text-white group-hover:text-slate-100">{theme.name}</span>
-                    <span 
+                    <span
                       className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border"
-                      style={{ 
-                        backgroundColor: `${theme.primary}18`, 
-                        color: theme.primary, 
-                        borderColor: `${theme.primary}35` 
+                      style={{
+                        backgroundColor: `${theme.primary}18`,
+                        color: theme.primary,
+                        borderColor: `${theme.primary}35`
                       }}
                     >
                       {theme.badge}
                     </span>
                   </div>
                   <p className="text-xs text-slate-400">{theme.desc}</p>
-                  
+
                   {/* Color preview swatches */}
                   <div className="flex items-center gap-1.5 pt-1.5">
                     {theme.swatches.map((color, i) => (
-                      <span 
-                        key={i} 
+                      <span
+                        key={i}
                         className="w-3.5 h-3.5 rounded-full shadow-sm"
                         style={{ backgroundColor: color }}
                       ></span>
@@ -139,10 +139,10 @@ export default function ThemeSelectorModal({ currentTheme, onSelectTheme, onClos
                   </div>
                 </div>
 
-                <div 
+                <div
                   className={`w-6 h-6 rounded-full flex items-center justify-center border transition-all ${
-                    isSelected 
-                      ? 'text-black' 
+                    isSelected
+                      ? 'text-black'
                       : 'border-slate-700 bg-slate-900'
                   }`}
                   style={{ backgroundColor: isSelected ? theme.primary : undefined, borderColor: isSelected ? theme.primary : undefined }}

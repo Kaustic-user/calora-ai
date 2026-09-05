@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 
 /**
  * DynamicBackground - Curated 5 High-Performance Interactive Canvas Backgrounds
- * 
+ *
  * 1. spacetime - Albert Einstein Gravitational Spacetime Inward Curvature
  * 2. metabolic - Cellular ATP & Glucose Lattice (Calorie Combustion Sparks)
  * 3. amino - Amino Acid & Macronutrient Peptide Chains (Protein Synthesis)

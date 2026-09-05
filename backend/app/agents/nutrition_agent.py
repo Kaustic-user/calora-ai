@@ -8,8 +8,8 @@ logger = logging.getLogger("CaloraAI.NutritionAgent")
 
 class NutritionAgent:
     def parse_meal(
-        self, 
-        text: str, 
+        self,
+        text: str,
         user_preference: str = "vegetarian",
         user_memory: Dict[str, Any] = None
     ) -> Tuple[List[MealLogCreate], List[ClarificationItem]]:
@@ -17,7 +17,7 @@ class NutritionAgent:
         Parses voice/text input into one or more structured meals (Multi-Meal Segmentation),
         macronutrients, and dynamic AI clarification cards.
         """
-        
+
         memory_context = ""
         if user_memory and user_memory.get("habits"):
             memory_context = f"Known user habits: {', '.join(user_memory['habits'])}."
@@ -69,10 +69,10 @@ class NutritionAgent:
             "  ]\n"
             "}"
         )
-        
+
         prompt = f"User logged: '{text}'. User dietary preference context: {user_preference}. {memory_context}"
         llm_result = gemini_service.generate_json_response(prompt, system_instruction)
-        
+
         detected_meals: List[MealLogCreate] = []
         clarifications: List[ClarificationItem] = []
 
@@ -157,7 +157,7 @@ class NutritionAgent:
 
             if (has_bf and (has_lunch or has_dinner)) or (has_lunch and has_dinner):
                 logger.info("[NutritionAgent] Detected multi-meal period in voice transcript. Splitting periods...")
-                
+
                 # Breakfast segment
                 if has_bf:
                     detected_meals.append(MealLogCreate(

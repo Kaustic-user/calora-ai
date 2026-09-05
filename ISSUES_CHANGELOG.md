@@ -39,7 +39,7 @@ This document tracks all issues, architectural refinements, and bug fixes made d
 
 ### 8. Confetti Triggering on Unknown Intent & Lack of Guidance
 * **Issue**: Saying unrelated text or noise resolved to `intent: "unknown"` but still fired celebratory confetti on the dashboard and gave no feedback.
-* **Fix**: 
+* **Fix**:
   - Updated `orchestrator.py` to return helpful conversational guidance when intent is unrecognized.
   - Updated `App.jsx` so celebratory confetti *only* fires when a valid meal or workout is detected.
 
@@ -49,7 +49,7 @@ This document tracks all issues, architectural refinements, and bug fixes made d
 
 ### 10. Live Multi-Theme Engine (6 Pure Dark Palettes)
 * **Issue**: User requested option to choose and preview different premium dark themes on the fly.
-* **Fix**: 
+* **Fix**:
   - Built a dynamic CSS Variable-based theme engine supporting 6 dark palettes (Synthwave Horizon, Midnight Cyber, Emerald Matrix, Stealth Performance, Obsidian & Gold, Abyss Bioluminescent).
   - Added a clean **Theme Selector Modal** with live swatch previews and instant 1-click switching (persists in `localStorage`).
 
@@ -68,7 +68,7 @@ This document tracks all issues, architectural refinements, and bug fixes made d
 
 ### 13. Pre-Log Clarification Confirmation Flow
 * **Issue**: Previously, ambiguous meals were saved to the database immediately with standard default assumptions, and only asked for clarification after the fact.
-* **Fix**: 
+* **Fix**:
   - Refactored `orchestrator.py` to hold ambiguous meals in a pending state without saving premature defaults to the SQLite DB.
   - When the user selects their clarification option (e.g. *"No Sugar"*), `voice.py` re-calculates the exact macros, saves the habit to `UserMemory`, persists the finalized `MealLog` into `calora.db`, and triggers celebratory feedback.
 
@@ -147,7 +147,7 @@ This document tracks all issues, architectural refinements, and bug fixes made d
   - Added `detected_meals: List[MealLogCreate]` to `AgentProcessResponse` while preserving single-meal backwards compatibility.
 
 ### 25. False-Positive Workout Routing on "Yoga Bar", Clarification Target Isolation & Multi-Question UI State Safety
-* **Issue**: 
+* **Issue**:
   1. The phrase `"Yoga Bar oats"` falsely triggered the workout classifier because `"yoga"` matched in `WORKOUT_ITEMS_REGEX`, causing the orchestrator to classify the note as `both` (Meal + Workout).
   2. Because a phantom workout was pending, answering food clarifications (e.g. `paratha_fat_check`, `rajma_rice_portion`) routed to `WorkoutAgent`, saving 0 kcal workouts into SQLite instead of food logs.
   3. When multiple clarification questions were pending, answering the first question prematurely wiped the pending state, causing `ClarificationBanner.jsx` to throw a `TypeError` and render a blank UI screen.

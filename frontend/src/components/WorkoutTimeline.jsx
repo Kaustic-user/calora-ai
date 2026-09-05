@@ -4,16 +4,16 @@ import { Dumbbell, Trash2, Edit2, Clock, Flame, Zap, Plus } from 'lucide-react';
 export default function WorkoutTimeline({ workouts, onDeleteWorkout, onEditWorkout, onAddWorkout, isToday = true }) {
   if (!workouts || workouts.length === 0) {
     return (
-      <div 
+      <div
         className="border rounded-3xl p-8 text-center shadow-xl transition-all"
         style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-card)' }}
       >
-        <div 
+        <div
           className="w-12 h-12 rounded-2xl border flex items-center justify-center mx-auto mb-3"
-          style={{ 
-            backgroundColor: 'var(--accent-glow)', 
+          style={{
+            backgroundColor: 'var(--accent-glow)',
             borderColor: 'var(--accent-primary)',
-            color: 'var(--accent-primary)' 
+            color: 'var(--accent-primary)'
           }}
         >
           <Dumbbell className="w-6 h-6" />
@@ -62,10 +62,10 @@ export default function WorkoutTimeline({ workouts, onDeleteWorkout, onEditWorko
           <button
             onClick={onAddWorkout}
             className="px-3 py-1.5 rounded-xl text-xs font-bold border flex items-center gap-1.5 transition-all shadow-sm hover:scale-102 active:scale-95"
-            style={{ 
-              backgroundColor: 'var(--bg-card)', 
-              borderColor: 'var(--border-card)', 
-              color: 'var(--text-main)' 
+            style={{
+              backgroundColor: 'var(--bg-card)',
+              borderColor: 'var(--border-card)',
+              color: 'var(--text-main)'
             }}
           >
             <Plus className="w-3.5 h-3.5" style={{ color: 'var(--accent-primary)' }} />
@@ -130,19 +130,19 @@ export default function WorkoutTimeline({ workouts, onDeleteWorkout, onEditWorko
                   : (typeof workout.muscle_groups === 'string'
                       ? workout.muscle_groups.split(',').map(s => s.trim()).filter(Boolean)
                       : []);
-                
+
                 if (muscleList.length === 0) return null;
 
                 return (
                   <div className="flex flex-wrap gap-1.5 mb-3">
                     {muscleList.map((m, idx) => (
-                      <span 
-                        key={idx} 
+                      <span
+                        key={idx}
                         className="text-[10px] px-2 py-0.5 rounded-md font-medium border"
-                        style={{ 
-                          backgroundColor: 'var(--bg-card-subtle)', 
+                        style={{
+                          backgroundColor: 'var(--bg-card-subtle)',
                           borderColor: 'var(--border-card)',
-                          color: 'var(--text-muted)' 
+                          color: 'var(--text-muted)'
                         }}
                       >
                         {m}
@@ -154,7 +154,7 @@ export default function WorkoutTimeline({ workouts, onDeleteWorkout, onEditWorko
             </div>
 
             {/* Stats Footer */}
-            <div 
+            <div
               className="grid grid-cols-2 gap-2 pt-3 border-t text-center text-xs"
               style={{ borderColor: 'var(--border-card)' }}
             >

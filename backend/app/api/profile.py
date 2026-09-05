@@ -13,7 +13,7 @@ def compute_bmr_and_tdee(weight_kg: float, height_cm: float, age: int, gender: s
     ht = float(height_cm or 175.0)
     ag = int(age or 25)
     gen = (gender or "male").lower()
-    
+
     if gen == "female":
         bmr = (10.0 * wt) + (6.25 * ht) - (5.0 * ag) - 161.0
     else:
@@ -42,7 +42,7 @@ def get_profile(db: Session = Depends(get_db)):
     bmr, tdee = compute_bmr_and_tdee(
         profile.weight_kg, profile.height_cm, profile.age, profile.gender, profile.activity_level
     )
-    
+
     resp = UserProfileSchema.model_validate(profile)
     resp.bmr = bmr
     resp.tdee = tdee
@@ -82,7 +82,7 @@ def update_profile(updated: UserProfileSchema, db: Session = Depends(get_db)):
     bmr, tdee = compute_bmr_and_tdee(
         profile.weight_kg, profile.height_cm, profile.age, profile.gender, profile.activity_level
     )
-    
+
     resp = UserProfileSchema.model_validate(profile)
     resp.bmr = bmr
     resp.tdee = tdee

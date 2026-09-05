@@ -35,12 +35,12 @@ export default function MealRecommender({ onQuickLog }) {
     }));
 
     try {
-      const url = filterId 
+      const url = filterId
         ? `/api/recommendations/dinner?filter=${encodeURIComponent(filterId)}`
         : '/api/recommendations/dinner';
       const res = await fetch(url);
       const data = await res.json();
-      
+
       setTabData(prev => ({
         ...prev,
         [filterId]: {
@@ -72,7 +72,7 @@ export default function MealRecommender({ onQuickLog }) {
   };
 
   return (
-    <div 
+    <div
       className="border rounded-3xl p-6 shadow-2xl transition-all relative overflow-hidden"
       style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-card)' }}
     >
@@ -94,10 +94,10 @@ export default function MealRecommender({ onQuickLog }) {
             onClick={() => fetchRecommendationsForTab(activeFilter)}
             disabled={currentTab.loading}
             className="text-xs hover:text-white transition-all flex items-center gap-1.5 font-bold px-3.5 py-1.5 rounded-xl border self-start sm:self-auto shadow-sm hover:scale-102 active:scale-95"
-            style={{ 
+            style={{
               backgroundColor: 'var(--bg-card-subtle)',
               borderColor: 'var(--border-card)',
-              color: 'var(--accent-primary)' 
+              color: 'var(--accent-primary)'
             }}
           >
             {currentTab.loading ? (
@@ -153,11 +153,11 @@ export default function MealRecommender({ onQuickLog }) {
           </p>
         </div>
       ) : !currentTab.hasGenerated ? (
-        <div 
+        <div
           className="py-10 px-6 text-center rounded-2xl border flex flex-col items-center justify-center gap-3 transition-all animate-fade-in"
           style={{ backgroundColor: 'var(--bg-card-subtle)', borderColor: 'var(--border-card)' }}
         >
-          <div 
+          <div
             className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg mb-1"
             style={{ backgroundColor: 'var(--accent-glow)', color: 'var(--accent-primary)', border: '1px solid var(--accent-primary)' }}
           >
@@ -192,12 +192,12 @@ export default function MealRecommender({ onQuickLog }) {
             >
               <div>
                 <div className="flex justify-between items-start mb-2">
-                  <span 
+                  <span
                     className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border"
-                    style={{ 
-                      backgroundColor: 'var(--accent-glow)', 
+                    style={{
+                      backgroundColor: 'var(--accent-glow)',
                       color: 'var(--accent-primary)',
-                      borderColor: 'var(--accent-primary)' 
+                      borderColor: 'var(--accent-primary)'
                     }}
                   >
                     {rec.dietary}
@@ -218,8 +218,8 @@ export default function MealRecommender({ onQuickLog }) {
                 {/* Items & Ingredients */}
                 <div className="flex flex-wrap gap-1 mb-3">
                   {rec.items.map((item, i) => (
-                    <span 
-                      key={i} 
+                    <span
+                      key={i}
                       className="text-[10px] px-2 py-0.5 rounded-md text-slate-300 border"
                       style={{ backgroundColor: 'var(--bg-base)', borderColor: 'var(--border-card)' }}
                     >
@@ -230,7 +230,7 @@ export default function MealRecommender({ onQuickLog }) {
               </div>
 
               <div>
-                <div 
+                <div
                   className="grid grid-cols-3 gap-1 py-2 border-t text-center text-xs mb-3"
                   style={{ borderColor: 'var(--border-card)' }}
                 >

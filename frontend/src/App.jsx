@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Zap, 
-  Settings, 
-  Sparkles, 
-  Flame, 
-  Calendar, 
-  HeartPulse, 
-  CheckCircle2, 
+import {
+  Zap,
+  Settings,
+  Sparkles,
+  Flame,
+  Calendar,
+  HeartPulse,
+  CheckCircle2,
   AlertCircle,
   Palette,
   Compass
@@ -57,7 +57,7 @@ export default function App() {
     mode: 'meal', // 'meal' or 'workout'
     data: null    // null = create mode, object = edit mode
   });
-  
+
   // Theme palette and Background canvas selection (persists in localStorage)
   const [currentTheme, setCurrentTheme] = useState(() => {
     return localStorage.getItem('calora_theme') || 'cyber';
@@ -345,7 +345,7 @@ export default function App() {
   const currentBgObj = BACKGROUNDS.find(b => b.id === activeBg) || BACKGROUNDS[0];
 
   return (
-    <div 
+    <div
       className="min-h-screen pb-16 transition-colors duration-300 relative overflow-x-hidden"
       style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-main)' }}
     >
@@ -353,15 +353,15 @@ export default function App() {
       <DynamicBackground bgMode={activeBg} currentTheme={currentTheme} />
 
       {/* Fixed Top Navigation Bar */}
-      <header 
+      <header
         className="fixed top-0 inset-x-0 z-40 backdrop-blur-xl border-b px-4 sm:px-8 py-3.5 flex items-center justify-between transition-all shadow-md"
-        style={{ 
-          backgroundColor: 'var(--header-bg)', 
-          borderColor: 'var(--border-card)' 
+        style={{
+          backgroundColor: 'var(--header-bg)',
+          borderColor: 'var(--border-card)'
         }}
       >
         <div className="flex items-center gap-3">
-          <div 
+          <div
             className="w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg text-white font-extrabold text-xl transition-all"
             style={{ backgroundColor: 'var(--accent-primary)' }}
           >
@@ -375,7 +375,7 @@ export default function App() {
 
         {/* Tab switcher & Action Controls */}
         <div className="flex items-center gap-2 sm:gap-3">
-          <div 
+          <div
             className="hidden sm:flex p-1 rounded-xl border"
             style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-card)' }}
           >
@@ -405,8 +405,8 @@ export default function App() {
           <button
             onClick={() => setShowBgModal(true)}
             className="flex items-center gap-1.5 px-3 py-2 border rounded-xl text-xs font-bold transition-all hover:scale-105"
-            style={{ 
-              backgroundColor: 'var(--bg-card)', 
+            style={{
+              backgroundColor: 'var(--bg-card)',
               borderColor: 'var(--border-card)',
               color: 'var(--text-main)'
             }}
@@ -420,8 +420,8 @@ export default function App() {
           <button
             onClick={() => setShowThemes(true)}
             className="flex items-center gap-1.5 px-3 py-2 border rounded-xl text-xs font-bold transition-all hover:scale-105"
-            style={{ 
-              backgroundColor: 'var(--bg-card)', 
+            style={{
+              backgroundColor: 'var(--bg-card)',
               borderColor: 'var(--border-card)',
               color: 'var(--text-main)'
             }}
@@ -435,8 +435,8 @@ export default function App() {
           <button
             onClick={() => setShowSettings(true)}
             className="p-2 border rounded-xl transition-colors hover:scale-105"
-            style={{ 
-              backgroundColor: 'var(--bg-card)', 
+            style={{
+              backgroundColor: 'var(--bg-card)',
               borderColor: 'var(--border-card)',
               color: 'var(--text-muted)'
             }}
@@ -451,11 +451,11 @@ export default function App() {
       <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-24 space-y-6 relative z-10">
         {/* Latest AI Insight Notification if available */}
         {latestInsights.length > 0 && (
-          <div 
+          <div
             className="border rounded-2xl p-4 shadow-2xl relative overflow-hidden backdrop-blur-md animate-fade-in"
-            style={{ 
-              backgroundColor: 'var(--bg-card)', 
-              borderColor: 'var(--accent-primary)' 
+            style={{
+              backgroundColor: 'var(--bg-card)',
+              borderColor: 'var(--accent-primary)'
             }}
           >
             <div className="flex items-center justify-between gap-3 text-sm" style={{ color: 'var(--text-main)' }}>
@@ -472,7 +472,7 @@ export default function App() {
               </button>
             </div>
             {/* Animated 6-second TTL countdown bar */}
-            <div 
+            <div
               className="absolute bottom-0 left-0 h-1 animate-ttl-progress"
               style={{ backgroundColor: 'var(--accent-primary)' }}
             ></div>

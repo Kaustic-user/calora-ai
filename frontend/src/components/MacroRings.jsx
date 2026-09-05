@@ -42,11 +42,11 @@ export default function MacroRings({ summary }) {
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       {/* Main Calorie Ring Card */}
-      <div 
+      <div
         className="lg:col-span-5 border rounded-3xl p-6 shadow-2xl flex flex-col items-center justify-center relative overflow-hidden transition-colors"
-        style={{ 
-          backgroundColor: 'var(--bg-card)', 
-          borderColor: 'var(--border-card)' 
+        style={{
+          backgroundColor: 'var(--bg-card)',
+          borderColor: 'var(--border-card)'
         }}
       >
         <div className="absolute top-4 left-4 flex items-center gap-2">
@@ -91,7 +91,7 @@ export default function MacroRings({ summary }) {
         </div>
 
         {/* Calorie Stats Footer */}
-        <div 
+        <div
           className="grid grid-cols-3 w-full gap-2 pt-2 border-t text-center"
           style={{ borderColor: 'var(--border-card)' }}
         >
@@ -114,11 +114,11 @@ export default function MacroRings({ summary }) {
       </div>
 
       {/* Macronutrient Bars */}
-      <div 
+      <div
         className="lg:col-span-7 border rounded-3xl p-6 shadow-2xl flex flex-col justify-between transition-colors"
-        style={{ 
-          backgroundColor: 'var(--bg-card)', 
-          borderColor: 'var(--border-card)' 
+        style={{
+          backgroundColor: 'var(--bg-card)',
+          borderColor: 'var(--border-card)'
         }}
       >
         <div className="flex items-center justify-between mb-4">
@@ -201,21 +201,21 @@ export default function MacroRings({ summary }) {
       </div>
 
       {/* Dynamic Calorie Deficit / Surplus Energy Balance Card */}
-      <div 
+      <div
         className="lg:col-span-12 border rounded-3xl p-5 shadow-xl transition-all relative overflow-hidden"
-        style={{ 
-          backgroundColor: 'var(--bg-card)', 
-          borderColor: 'var(--border-card)' 
+        style={{
+          backgroundColor: 'var(--bg-card)',
+          borderColor: 'var(--border-card)'
         }}
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
           <div className="flex items-center gap-3">
-            <div 
+            <div
               className="p-2.5 rounded-2xl border transition-colors"
-              style={{ 
-                backgroundColor: is_in_deficit ? 'var(--accent-glow)' : 'rgba(245, 158, 11, 0.15)', 
+              style={{
+                backgroundColor: is_in_deficit ? 'var(--accent-glow)' : 'rgba(245, 158, 11, 0.15)',
                 borderColor: is_in_deficit ? 'var(--accent-primary)' : '#F59E0B',
-                color: is_in_deficit ? 'var(--accent-primary)' : '#F59E0B' 
+                color: is_in_deficit ? 'var(--accent-primary)' : '#F59E0B'
               }}
             >
               {is_in_deficit ? <TrendingDown className="w-5 h-5" /> : <TrendingUp className="w-5 h-5" />}
@@ -248,9 +248,9 @@ export default function MacroRings({ summary }) {
 
         {/* Visual Deficit Progress Gauge Bar */}
         <div className="w-full bg-slate-800/80 h-3.5 rounded-full overflow-hidden relative border border-slate-700/50">
-          <div 
+          <div
             className="h-full rounded-full transition-all duration-700"
-            style={{ 
+            style={{
               width: `${Math.min(100, Math.max(3, (Math.max(0, calorie_deficit) / (target_deficit || 500)) * 100))}%`,
               backgroundColor: is_in_deficit ? 'var(--accent-primary)' : '#F59E0B'
             }}

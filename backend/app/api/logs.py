@@ -10,7 +10,7 @@ from app.schemas.schemas import (
     MealLogResponse,
     WorkoutLogResponse,
     DailySummaryResponse,
-    DailyTrendPoint, 
+    DailyTrendPoint,
     WeeklyTrendsResponse,
     MealLogUpdate,
     WorkoutLogUpdate,

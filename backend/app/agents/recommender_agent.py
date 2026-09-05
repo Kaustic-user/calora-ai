@@ -131,7 +131,7 @@ class RecommenderAgent:
         cache_bucket_cals = round(remaining_calories / 50)
         cache_bucket_prot = round(remaining_protein / 5)
         cache_key = f"{time_context}_{active_filter}_{cache_bucket_cals}_{cache_bucket_prot}_{dietary_preference}"
-        
+
         now = time.time()
         if cache_key in self._cache:
             cached_time, cached_recs = self._cache[cache_key]

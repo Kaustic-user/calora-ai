@@ -175,14 +175,14 @@ export default function EditLogModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200">
-      <div 
+      <div
         className="w-full max-w-lg border rounded-3xl p-6 sm:p-7 shadow-2xl overflow-y-auto max-h-[90vh] transition-all"
         style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-card)', color: 'var(--text-main)' }}
       >
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-5">
           <div className="flex items-center gap-3">
-            <div 
+            <div
               className="w-10 h-10 rounded-2xl flex items-center justify-center"
               style={{
                 backgroundColor: mode === 'meal' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(244, 63, 94, 0.15)',
@@ -201,7 +201,7 @@ export default function EditLogModal({
             </div>
           </div>
 
-          <button 
+          <button
             onClick={onClose}
             className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
           >

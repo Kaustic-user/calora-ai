@@ -176,7 +176,7 @@ class IntentAgent:
         )
         prompt = f"User input: '{text}'"
         result = gemini_service.generate_json_response(prompt, system_instruction)
-        
+
         elapsed_ms = (time.perf_counter() - t0) * 1000.0
         if result and "intent" in result:
             intent = result["intent"]

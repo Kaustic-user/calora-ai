@@ -6,7 +6,7 @@ export default function VoiceRecorder({ onProcessResult, isProcessing, setIsProc
   const [recordDuration, setRecordDuration] = useState(0);
   const [textInput, setTextInput] = useState('');
   const [mode, setMode] = useState('voice'); // 'voice' or 'text'
-  
+
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const timerRef = useRef(null);
@@ -143,27 +143,27 @@ export default function VoiceRecorder({ onProcessResult, isProcessing, setIsProc
   };
 
   return (
-    <div 
+    <div
       className="border rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden backdrop-blur-xl transition-all"
-      style={{ 
-        backgroundColor: 'var(--bg-card)', 
-        borderColor: 'var(--border-card)' 
+      style={{
+        backgroundColor: 'var(--bg-card)',
+        borderColor: 'var(--border-card)'
       }}
     >
       {/* Background ambient neon glow */}
-      <div 
+      <div
         className="absolute -right-16 -top-16 w-56 h-56 rounded-full blur-3xl pointer-events-none transition-all"
         style={{ backgroundColor: 'var(--accent-glow)' }}
       ></div>
 
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div 
+          <div
             className="p-2.5 rounded-2xl border"
-            style={{ 
-              backgroundColor: 'var(--accent-glow)', 
+            style={{
+              backgroundColor: 'var(--accent-glow)',
               borderColor: 'var(--accent-primary)',
-              color: 'var(--accent-primary)' 
+              color: 'var(--accent-primary)'
             }}
           >
             <Sparkles className="w-5 h-5 animate-pulse" />
@@ -175,7 +175,7 @@ export default function VoiceRecorder({ onProcessResult, isProcessing, setIsProc
         </div>
 
         {/* Mode Toggle */}
-        <div 
+        <div
           className="flex p-1 rounded-xl border"
           style={{ backgroundColor: 'var(--bg-base)', borderColor: 'var(--border-card)' }}
         >
@@ -247,10 +247,10 @@ export default function VoiceRecorder({ onProcessResult, isProcessing, setIsProc
                   <span
                     key={i}
                     className="w-1 rounded-full animate-pulse"
-                    style={{ 
-                      height: `${h}%`, 
+                    style={{
+                      height: `${h}%`,
                       animationDelay: `${i * 0.1}s`,
-                      backgroundColor: 'var(--accent-primary)' 
+                      backgroundColor: 'var(--accent-primary)'
                     }}
                   ></span>
                 ))}
@@ -305,9 +305,9 @@ export default function VoiceRecorder({ onProcessResult, isProcessing, setIsProc
               type="submit"
               disabled={isProcessing || !textInput.trim()}
               className="flex items-center gap-2 px-5 py-2.5 text-white font-bold rounded-xl text-sm transition-all shadow-lg"
-              style={{ 
+              style={{
                 backgroundColor: 'var(--accent-primary)',
-                boxShadow: '0 4px 15px var(--accent-glow)' 
+                boxShadow: '0 4px 15px var(--accent-glow)'
               }}
             >
               {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}

@@ -14,7 +14,7 @@ export default function UserProfileModal({ profile, onClose, onSave }) {
   const [activityLevel, setActivityLevel] = useState(profile?.activity_level || 'sedentary');
   const [targetDeficit, setTargetDeficit] = useState(profile?.target_deficit_kcal || 500);
   const [dietaryPref, setDietaryPref] = useState(profile?.dietary_preference || 'vegetarian');
-  
+
   const [memories, setMemories] = useState([]);
   const [loadingMemories, setLoadingMemories] = useState(false);
 
@@ -26,7 +26,7 @@ export default function UserProfileModal({ profile, onClose, onSave }) {
     const bmrVal = (g === 'female')
       ? (10 * wt) + (6.25 * ht) - (5 * ag) - 161
       : (10 * wt) + (6.25 * ht) - (5 * ag) + 5;
-    
+
     const mults = {
       sedentary: 1.200,
       lightly_active: 1.375,
@@ -87,14 +87,14 @@ export default function UserProfileModal({ profile, onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in overflow-y-auto">
-      <div 
+      <div
         className="w-full max-w-xl rounded-3xl p-6 shadow-2xl border relative overflow-hidden transition-all my-8"
         style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-card)' }}
       >
         {/* Header */}
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-2.5">
-            <div 
+            <div
               className="p-2 rounded-xl text-white shadow-md"
               style={{ backgroundColor: 'var(--accent-primary)' }}
             >
@@ -119,7 +119,7 @@ export default function UserProfileModal({ profile, onClose, onSave }) {
         </div>
 
         {/* Tab Switcher */}
-        <div 
+        <div
           className="flex p-1 rounded-xl border mb-5 text-xs font-semibold"
           style={{ backgroundColor: 'var(--bg-card-subtle)', borderColor: 'var(--border-card)' }}
         >
@@ -150,7 +150,7 @@ export default function UserProfileModal({ profile, onClose, onSave }) {
         {activeTab === 'goals' ? (
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Live TDEE & BMR Calculation Overview */}
-            <div 
+            <div
               className="border p-4 rounded-2xl flex flex-col gap-3 shadow-md transition-all"
               style={{ backgroundColor: 'var(--bg-card-subtle)', borderColor: 'var(--border-card)' }}
             >
@@ -162,8 +162,8 @@ export default function UserProfileModal({ profile, onClose, onSave }) {
               </div>
 
               <div className="grid grid-cols-2 gap-3 text-center">
-                <div 
-                  className="p-3 rounded-xl border transition-all" 
+                <div
+                  className="p-3 rounded-xl border transition-all"
                   style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-card)' }}
                 >
                   <p className="text-[10px] uppercase font-semibold tracking-wider" style={{ color: 'var(--text-muted)' }}>
@@ -173,8 +173,8 @@ export default function UserProfileModal({ profile, onClose, onSave }) {
                     {liveBmr} <span className="text-[10px] font-normal" style={{ color: 'var(--text-muted)' }}>kcal/day</span>
                   </p>
                 </div>
-                <div 
-                  className="p-3 rounded-xl border transition-all" 
+                <div
+                  className="p-3 rounded-xl border transition-all"
                   style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-card)' }}
                 >
                   <p className="text-[10px] uppercase font-semibold tracking-wider" style={{ color: 'var(--text-muted)' }}>
@@ -188,8 +188,8 @@ export default function UserProfileModal({ profile, onClose, onSave }) {
             </div>
 
             {/* Physical Attributes Grid */}
-            <div 
-              className="border p-4 rounded-2xl space-y-3 transition-all" 
+            <div
+              className="border p-4 rounded-2xl space-y-3 transition-all"
               style={{ backgroundColor: 'var(--bg-card-subtle)', borderColor: 'var(--border-card)' }}
             >
               <h4 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-main)' }}>
@@ -290,10 +290,10 @@ export default function UserProfileModal({ profile, onClose, onSave }) {
                 value={dietaryPref}
                 onChange={(e) => setDietaryPref(e.target.value)}
                 className="w-full border rounded-xl p-2.5 text-xs focus:outline-none focus:ring-2"
-                style={{ 
-                  backgroundColor: 'var(--bg-card-subtle)', 
+                style={{
+                  backgroundColor: 'var(--bg-card-subtle)',
                   borderColor: 'var(--border-card)',
-                  color: 'var(--text-main)' 
+                  color: 'var(--text-main)'
                 }}
               >
                 <option value="vegetarian">Vegetarian (Indian / Global)</option>
@@ -314,10 +314,10 @@ export default function UserProfileModal({ profile, onClose, onSave }) {
                   value={calorieTarget}
                   onChange={(e) => setCalorieTarget(e.target.value)}
                   className="w-full border rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2"
-                  style={{ 
-                    backgroundColor: 'var(--bg-card-subtle)', 
+                  style={{
+                    backgroundColor: 'var(--bg-card-subtle)',
                     borderColor: 'var(--border-card)',
-                    color: 'var(--text-main)' 
+                    color: 'var(--text-main)'
                   }}
                 />
               </div>
@@ -330,10 +330,10 @@ export default function UserProfileModal({ profile, onClose, onSave }) {
                   value={proteinTarget}
                   onChange={(e) => setProteinTarget(e.target.value)}
                   className="w-full border rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2"
-                  style={{ 
-                    backgroundColor: 'var(--bg-card-subtle)', 
+                  style={{
+                    backgroundColor: 'var(--bg-card-subtle)',
                     borderColor: 'var(--border-card)',
-                    color: 'var(--text-main)' 
+                    color: 'var(--text-main)'
                   }}
                 />
               </div>
@@ -349,10 +349,10 @@ export default function UserProfileModal({ profile, onClose, onSave }) {
                   value={carbsTarget}
                   onChange={(e) => setCarbsTarget(e.target.value)}
                   className="w-full border rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2"
-                  style={{ 
-                    backgroundColor: 'var(--bg-card-subtle)', 
+                  style={{
+                    backgroundColor: 'var(--bg-card-subtle)',
                     borderColor: 'var(--border-card)',
-                    color: 'var(--text-main)' 
+                    color: 'var(--text-main)'
                   }}
                 />
               </div>
@@ -365,10 +365,10 @@ export default function UserProfileModal({ profile, onClose, onSave }) {
                   value={fatTarget}
                   onChange={(e) => setFatTarget(e.target.value)}
                   className="w-full border rounded-xl p-2.5 text-sm focus:outline-none focus:ring-2"
-                  style={{ 
-                    backgroundColor: 'var(--bg-card-subtle)', 
+                  style={{
+                    backgroundColor: 'var(--bg-card-subtle)',
                     borderColor: 'var(--border-card)',
-                    color: 'var(--text-main)' 
+                    color: 'var(--text-main)'
                   }}
                 />
               </div>
@@ -421,12 +421,12 @@ export default function UserProfileModal({ profile, onClose, onSave }) {
                     <div className="space-y-0.5">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-bold text-white font-mono">{mem.key}</span>
-                        <span 
+                        <span
                           className="text-[10px] px-1.5 py-0.2 rounded border uppercase font-bold"
-                          style={{ 
-                            backgroundColor: 'var(--accent-glow)', 
+                          style={{
+                            backgroundColor: 'var(--accent-glow)',
                             color: 'var(--accent-primary)',
-                            borderColor: 'var(--accent-primary)' 
+                            borderColor: 'var(--accent-primary)'
                           }}
                         >
                           {mem.category}

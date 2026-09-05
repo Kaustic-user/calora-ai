@@ -7,9 +7,9 @@ from typing import Optional, List
 from app.db.database import get_db
 from app.db.models import MealLog, WorkoutLog, UserProfile
 from app.schemas.schemas import (
-    AgentProcessResponse, 
-    AgentVoiceProcessRequest, 
-    MealLogCreate, 
+    AgentProcessResponse,
+    AgentVoiceProcessRequest,
+    MealLogCreate,
     ClarificationResolveRequest
 )
 from app.services.gemini_service import gemini_service
@@ -34,7 +34,7 @@ async def process_audio_file(
         transcript = gemini_service.transcribe_audio(audio_bytes, mime_type)
 
         response = orchestrator.process_voice_transcript(
-            transcript=transcript or "", 
+            transcript=transcript or "",
             db=db,
             user_id=1,
             auto_save=True
@@ -59,7 +59,7 @@ def process_text_transcript(
         text = payload.text or ""
         if not text.strip():
             raise HTTPException(status_code=400, detail="Text cannot be empty.")
-        
+
         response = orchestrator.process_voice_transcript(
             transcript=text,
             db=db,
@@ -103,7 +103,7 @@ def resolve_clarification(
         cid_lower = payload.clarification_id.lower()
         is_workout_clarification = any(w in cid_lower for w in ["workout", "running", "run", "duration", "exercise", "intensity", "reps", "sets", "pullup", "pushup", "squat", "speed", "incline"])
         is_food_clarification = any(f in cid_lower for f in ["food", "meal", "oil", "ghee", "sugar", "milk", "tea", "chai", "coffee", "portion", "paratha", "oats", "rice", "dal", "fat", "dressing", "roti"])
-        
+
         is_workout = is_workout_clarification or (bool(payload.pending_workout) and not bool(payload.pending_meal) and not is_food_clarification)
 
         if is_workout:
@@ -242,7 +242,7 @@ async def resolve_clarification_audio(
         spoken_clarification = gemini_service.transcribe_audio(audio_bytes, mime_type).strip()
         if not spoken_clarification:
             spoken_clarification = "Custom preparation"
-        
+
         logger.info(f"[VoiceAPI] Spoken clarification transcribed: \"{spoken_clarification}\"")
 
         # 2. Extract clean habit value (concise 2-5 words)
@@ -276,7 +276,7 @@ async def resolve_clarification_audio(
         cid_lower = clarification_id.lower()
         is_workout_clarification = any(w in cid_lower for w in ["workout", "running", "run", "duration", "exercise", "intensity", "reps", "sets", "pullup", "pushup", "squat", "speed", "incline"])
         is_food_clarification = any(f in cid_lower for f in ["food", "meal", "oil", "ghee", "sugar", "milk", "tea", "chai", "coffee", "portion", "paratha", "oats", "rice", "dal", "fat", "dressing", "roti"])
-        
+
         is_workout = is_workout_clarification or (bool(pending_workout_name) and not bool(pending_meal_title) and not is_food_clarification)
 
         if is_workout:
@@ -288,11 +288,11 @@ async def resolve_clarification_audio(
             user_weight = profile.weight_kg if profile and profile.weight_kg else 70.0
             user_memory = memory_agent.get_user_context(db)
             recalculated_workout, _ = workout_agent.parse_workout(
-                text=confirmed_text, 
+                text=confirmed_text,
                 user_weight_kg=user_weight,
                 user_memory=user_memory
             )
-            
+
             if recalculated_workout:
                 db_workout = WorkoutLog(
                     exercise_name=recalculated_workout.exercise_name,

@@ -17,7 +17,7 @@ class GeminiService:
         self.api_key = os.getenv("GEMINI_API_KEY", "")
         self.model_name = os.getenv("GEMINI_MODEL", "gemini-3.7-flash")
         self.audio_model = os.getenv("GEMINI_AUDIO_MODEL", "gemini-3.7-flash")
-        
+
         # Top-Down Quality Hierarchy: Starts with the most capable reasoning models and cascades downward
         self.text_fallback_models = [
             "gemini-3.7-flash",               # Top reasoning & clinical nutrition intelligence
@@ -39,7 +39,7 @@ class GeminiService:
         ]
 
         self.client = None
-        
+
         if self.api_key and self.api_key.strip() != "" and self.api_key != "your_gemini_api_key_here":
             try:
                 from google import genai
@@ -55,7 +55,7 @@ class GeminiService:
     def transcribe_audio(self, audio_bytes: bytes, mime_type: str = "audio/webm") -> str:
         """Transcribes audio using Top-Down Speech-to-Text cascade"""
         logger.info(f"[GeminiService] Received audio payload: bytes={len(audio_bytes)}, mime_type={mime_type}")
-        
+
         if not self.client:
             raise ValueError("Gemini API client is not configured. Please check your GEMINI_API_KEY in .env.")
 
@@ -66,7 +66,7 @@ class GeminiService:
             try:
                 from google.genai import types
                 logger.info(f"[GeminiService] Dispatching audio to {model} for speech-to-text...")
-                
+
                 response = self.client.models.generate_content(
                     model=model,
                     contents=[
@@ -74,7 +74,7 @@ class GeminiService:
                         "Listen to this audio recording and transcribe the spoken words accurately into text. Return ONLY the transcribed text. Do not add quotes, markdown, or explanations."
                     ]
                 )
-                
+
                 if response is not None and response.text:
                     transcript = response.text.strip()
                     if transcript:
