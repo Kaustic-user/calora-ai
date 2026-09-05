@@ -164,6 +164,7 @@ export default function App() {
     }
 
     try {
+      const targetLogDate = pendingMeal?.log_date || pendingWorkout?.log_date || selectedDate;
       const res = await fetch('/api/voice/resolve-clarification', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -173,6 +174,7 @@ export default function App() {
           raw_transcript: pendingTranscript,
           pending_meal: pendingMeal,
           pending_workout: pendingWorkout,
+          log_date: targetLogDate,
           is_final: isFinal
         }),
       });
@@ -188,7 +190,12 @@ export default function App() {
         setPendingMeal(null);
         setPendingWorkout(null);
         setPendingTranscript('');
-        await fetchDailySummary(selectedDate);
+
+        const resolvedDate = data?.navigation_date || data?.log_date || targetLogDate;
+        if (resolvedDate && resolvedDate !== selectedDate) {
+          setSelectedDate(resolvedDate);
+        }
+        await fetchDailySummary(resolvedDate || selectedDate);
       }
 
       if (data.message) {
@@ -217,10 +224,12 @@ export default function App() {
     }
 
     try {
+      const targetLogDate = pendingMeal?.log_date || pendingWorkout?.log_date || selectedDate;
       const formData = new FormData();
       formData.append('file', audioBlob, 'clarification.webm');
       formData.append('clarification_id', clarificationId);
       formData.append('is_final', isFinal.toString());
+      if (targetLogDate) formData.append('log_date', targetLogDate);
       if (pendingTranscript) formData.append('raw_transcript', pendingTranscript);
       if (pendingMeal?.meal_title) formData.append('pending_meal_title', pendingMeal.meal_title);
       if (pendingWorkout?.exercise_name) formData.append('pending_workout_name', pendingWorkout.exercise_name);
@@ -241,7 +250,12 @@ export default function App() {
         setPendingMeal(null);
         setPendingWorkout(null);
         setPendingTranscript('');
-        await fetchDailySummary(selectedDate);
+
+        const resolvedDate = data?.navigation_date || data?.log_date || targetLogDate;
+        if (resolvedDate && resolvedDate !== selectedDate) {
+          setSelectedDate(resolvedDate);
+        }
+        await fetchDailySummary(resolvedDate || selectedDate);
       }
 
       if (data.message) {

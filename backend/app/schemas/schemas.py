@@ -169,6 +169,7 @@ class ClarificationResolveRequest(BaseModel):
     raw_transcript: Optional[str] = None
     pending_meal: Optional[MealLogCreate] = None
     pending_workout: Optional[WorkoutLogCreate] = None
+    log_date: Optional[date] = None
     is_final: bool = True
 
 class AgentProcessResponse(BaseModel):

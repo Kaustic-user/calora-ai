@@ -12,8 +12,9 @@ from app.schemas.schemas import (
     MealLogCreate,
     ClarificationResolveRequest
 )
+from datetime import date
 from app.services.gemini_service import gemini_service
-from app.agents.orchestrator import orchestrator
+from app.agents.orchestrator import orchestrator, resolve_target_date
 from app.agents.nutrition_agent import nutrition_agent
 from app.agents.workout_agent import workout_agent
 from app.agents.memory_agent import memory_agent
@@ -127,7 +128,12 @@ def resolve_clarification(
 
             finalized_workout = recalculated_workout or payload.pending_workout
             if finalized_workout:
-                w_date = finalized_workout.log_date if finalized_workout.log_date else (payload.pending_workout.log_date if payload.pending_workout and payload.pending_workout.log_date else date.today())
+                w_date = payload.log_date or (finalized_workout.log_date if finalized_workout.log_date else (payload.pending_workout.log_date if payload.pending_workout and payload.pending_workout.log_date else None))
+                if not w_date and payload.raw_transcript:
+                    w_date = resolve_target_date(payload.raw_transcript)
+                if not w_date:
+                    w_date = date.today()
+
                 db_workout = WorkoutLog(
                     exercise_name=finalized_workout.exercise_name,
                     workout_category=finalized_workout.workout_category,
@@ -150,6 +156,7 @@ def resolve_clarification(
                     "calories_burned": db_workout.calories_burned,
                     "duration_minutes": db_workout.duration_minutes,
                     "log_date": str(w_date),
+                    "navigation_date": str(w_date),
                     "message": f"Recorded {db_workout.exercise_name} ({db_workout.duration_minutes} mins, {db_workout.calories_burned} kcal burned)!"
                 }
 
@@ -182,7 +189,12 @@ def resolve_clarification(
         if finalized_meals:
             saved_records = []
             for meal in finalized_meals:
-                m_date = meal.log_date if meal.log_date else (payload.pending_meal.log_date if payload.pending_meal and payload.pending_meal.log_date else date.today())
+                m_date = payload.log_date or (meal.log_date if meal.log_date else (payload.pending_meal.log_date if payload.pending_meal and payload.pending_meal.log_date else None))
+                if not m_date and payload.raw_transcript:
+                    m_date = resolve_target_date(payload.raw_transcript)
+                if not m_date:
+                    m_date = date.today()
+
                 db_meal = MealLog(
                     meal_type=meal.meal_type,
                     meal_title=meal.meal_title,
@@ -212,6 +224,8 @@ def resolve_clarification(
                 "meal_title": titles,
                 "calories": total_cals,
                 "protein_g": saved_records[0].protein_g if saved_records else 0,
+                "log_date": str(saved_records[0].log_date if saved_records else date.today()),
+                "navigation_date": str(saved_records[0].log_date if saved_records else date.today()),
                 "message": f"Logged {titles} ({total_cals} kcal total) with preference '{payload.chosen_option}'!"
             }
 
@@ -227,6 +241,7 @@ async def resolve_clarification_audio(
     raw_transcript: Optional[str] = Form(None),
     pending_meal_title: Optional[str] = Form(None),
     pending_workout_name: Optional[str] = Form(None),
+    log_date: Optional[str] = Form(None),
     is_final: bool = Form(True),
     db: Session = Depends(get_db)
 ):
@@ -294,6 +309,17 @@ async def resolve_clarification_audio(
             )
 
             if recalculated_workout:
+                w_date = None
+                if log_date:
+                    try:
+                        w_date = date.fromisoformat(log_date)
+                    except Exception:
+                        pass
+                if not w_date and raw_transcript:
+                    w_date = resolve_target_date(raw_transcript)
+                if not w_date:
+                    w_date = date.today()
+
                 db_workout = WorkoutLog(
                     exercise_name=recalculated_workout.exercise_name,
                     workout_category=recalculated_workout.workout_category,
@@ -301,7 +327,8 @@ async def resolve_clarification_audio(
                     intensity=recalculated_workout.intensity,
                     calories_burned=recalculated_workout.calories_burned,
                     muscle_groups=recalculated_workout.muscle_groups,
-                    notes=f"Confirmed via voice: {clean_habit_value}"
+                    notes=f"Confirmed via voice: {clean_habit_value}",
+                    log_date=w_date
                 )
                 db.add(db_workout)
                 db.commit()
@@ -313,6 +340,8 @@ async def resolve_clarification_audio(
                     "exercise_name": db_workout.exercise_name,
                     "calories_burned": db_workout.calories_burned,
                     "duration_minutes": db_workout.duration_minutes,
+                    "log_date": str(w_date),
+                    "navigation_date": str(w_date),
                     "message": f"Recorded {db_workout.exercise_name} ({db_workout.duration_minutes} mins, {db_workout.calories_burned} kcal burned)!"
                 }
 
@@ -332,6 +361,17 @@ async def resolve_clarification_audio(
         )
 
         if recalculated_meals:
+            m_date = None
+            if log_date:
+                try:
+                    m_date = date.fromisoformat(log_date)
+                except Exception:
+                    pass
+            if not m_date and raw_transcript:
+                m_date = resolve_target_date(raw_transcript)
+            if not m_date:
+                m_date = date.today()
+
             saved_records = []
             for meal in recalculated_meals:
                 db_meal = MealLog(
@@ -345,7 +385,8 @@ async def resolve_clarification_audio(
                     fat_g=meal.fat_g,
                     fiber_g=meal.fiber_g,
                     assumptions_json=json.dumps(meal.assumptions + [f"Voice Confirmed: {clean_habit_value}"]),
-                    is_confirmed=True
+                    is_confirmed=True,
+                    log_date=m_date
                 )
                 db.add(db_meal)
                 db.commit()
@@ -361,6 +402,8 @@ async def resolve_clarification_audio(
                 "meal_title": titles,
                 "calories": total_cals,
                 "protein_g": saved_records[0].protein_g if saved_records else 0,
+                "log_date": str(m_date),
+                "navigation_date": str(m_date),
                 "message": f"Logged {titles} ({total_cals} kcal total) with preference '{clean_habit_value}'!"
             }
 

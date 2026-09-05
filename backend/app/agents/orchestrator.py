@@ -192,6 +192,7 @@ class MasterOrchestratorAgent:
                     "action": action_fallback,
                     "entity_type": entity_fallback,
                     "meal_type": m_type_fallback,
+                    "search_keywords": "",
                     "updated_instruction": transcript
                 }
 
@@ -199,17 +200,44 @@ class MasterOrchestratorAgent:
                 action = mutation_info.get("action", "update")
                 entity_type = mutation_info.get("entity_type", "meal")
                 m_type = mutation_info.get("meal_type", "lunch")
+                search_kw = str(mutation_info.get("search_keywords") or "").strip().lower()
                 updated_desc = mutation_info.get("updated_instruction", transcript)
 
-                if entity_type == "meal":
-                    query = db.query(MealLog).filter(MealLog.log_date == target_date)
-                    if m_type and m_type != "all":
-                        query = query.filter(MealLog.meal_type == m_type)
-                    target_meal_obj = query.order_by(MealLog.created_at.desc()).first()
+                # Detect if request is purely additive (e.g. "Add a snack", "Also had", "Another snack")
+                t_words = transcript.lower().split()
+                is_additive = any(w in t_words for w in ["add", "added", "adding", "also", "another", "plus"]) and not any(w in t_words for w in ["replace", "instead", "change", "modify", "delete", "remove", "cancel"])
 
-                    if not target_meal_obj:
-                        # If not found by type, match latest on that day
-                        target_meal_obj = db.query(MealLog).filter(MealLog.log_date == target_date).order_by(MealLog.created_at.desc()).first()
+                if entity_type == "meal":
+                    target_meal_obj = None
+                    candidate_meals = db.query(MealLog).filter(MealLog.log_date == target_date).order_by(MealLog.created_at.desc()).all()
+
+                    if not is_additive:
+                        # 1. Match by search keyword in meal_title, items, or raw_transcript
+                        if search_kw:
+                            for m in candidate_meals:
+                                m_text = f"{m.meal_title} {m.raw_transcript} {m.items_json}".lower()
+                                if search_kw in m_text or any(k in m_text for k in search_kw.split() if len(k) > 2):
+                                    target_meal_obj = m
+                                    break
+
+                        # 2. Match by meal_type if unique or explicit title match
+                        if not target_meal_obj and m_type and m_type != "all":
+                            type_matches = [m for m in candidate_meals if m.meal_type == m_type]
+                            if len(type_matches) == 1:
+                                target_meal_obj = type_matches[0]
+                            elif len(type_matches) > 1:
+                                # Check if transcript mentions words from any meal title
+                                for m in type_matches:
+                                    m_words = [w.lower() for w in m.meal_title.split() if len(w) > 3]
+                                    if any(w in transcript.lower() for w in m_words):
+                                        target_meal_obj = m
+                                        break
+                                if not target_meal_obj and action == "delete":
+                                    target_meal_obj = type_matches[0]
+
+                        # 3. Fallback: single meal on that day
+                        if not target_meal_obj and len(candidate_meals) == 1 and not is_additive:
+                            target_meal_obj = candidate_meals[0]
 
                     if target_meal_obj:
                         if action == "delete":
@@ -239,11 +267,24 @@ class MasterOrchestratorAgent:
                                 insights.append(f"✏️ Updated {date_label}'s {target_meal_obj.meal_type}: '{new_m.meal_title}' ({new_m.calories} kcal, {new_m.protein_g}g Protein).")
                                 operation_performed = "updated"
                     else:
-                        insights.append(f"Couldn't find an existing meal on {date_label} to modify. Logging as a new entry instead.")
+                        logger.info(f"[Orchestrator] No matching meal found to mutate (or additive intent detected). Routing to new meal creation for date={target_date}.")
                         intent = "meal" # Fallback to new meal log
 
                 elif entity_type == "workout":
-                    target_workout_obj = db.query(WorkoutLog).filter(WorkoutLog.log_date == target_date).order_by(WorkoutLog.created_at.desc()).first()
+                    target_workout_obj = None
+                    candidate_workouts = db.query(WorkoutLog).filter(WorkoutLog.log_date == target_date).order_by(WorkoutLog.created_at.desc()).all()
+
+                    if not is_additive:
+                        if search_kw:
+                            for w in candidate_workouts:
+                                w_text = f"{w.exercise_name} {w.notes}".lower()
+                                if search_kw in w_text or any(k in w_text for k in search_kw.split() if len(k) > 2):
+                                    target_workout_obj = w
+                                    break
+                        if not target_workout_obj and candidate_workouts:
+                            if action == "delete" or len(candidate_workouts) == 1:
+                                target_workout_obj = candidate_workouts[0]
+
                     if target_workout_obj:
                         if action == "delete":
                             deleted_name = target_workout_obj.exercise_name
@@ -253,14 +294,18 @@ class MasterOrchestratorAgent:
                             operation_performed = "deleted"
                         else:
                             recalc_w, _ = workout_agent.parse_workout(text=updated_desc, user_weight_kg=user_weight, user_memory=user_memory)
-                            target_workout_obj.exercise_name = recalc_w.exercise_name
-                            target_workout_obj.duration_minutes = recalc_w.duration_minutes
-                            target_workout_obj.calories_burned = recalc_w.calories_burned
-                            target_workout_obj.intensity = recalc_w.intensity
-                            db.commit()
-                            db.refresh(target_workout_obj)
-                            insights.append(f"✏️ Updated {date_label}'s workout: '{recalc_w.exercise_name}' ({recalc_w.calories_burned} kcal).")
-                            operation_performed = "updated"
+                            if recalc_w:
+                                target_workout_obj.exercise_name = recalc_w.exercise_name
+                                target_workout_obj.duration_minutes = recalc_w.duration_minutes
+                                target_workout_obj.calories_burned = recalc_w.calories_burned
+                                target_workout_obj.intensity = recalc_w.intensity
+                                db.commit()
+                                db.refresh(target_workout_obj)
+                                insights.append(f"✏️ Updated {date_label}'s workout: '{recalc_w.exercise_name}' ({recalc_w.calories_burned} kcal).")
+                                operation_performed = "updated"
+                    else:
+                        logger.info(f"[Orchestrator] No matching workout found to mutate. Routing to new workout creation for date={target_date}.")
+                        intent = "workout"
 
             if operation_performed in ["updated", "deleted"]:
                 return AgentProcessResponse(
