@@ -178,6 +178,8 @@ class AgentProcessResponse(BaseModel):
     detected_meal: Optional[MealLogCreate] = None
     detected_meals: List[MealLogCreate] = []
     detected_workout: Optional[WorkoutLogCreate] = None
+    saved_meal_id: Optional[int] = None
+    saved_workout_id: Optional[int] = None
     clarifications: List[ClarificationItem] = []
     insights: List[str] = []
     status: str = "success"

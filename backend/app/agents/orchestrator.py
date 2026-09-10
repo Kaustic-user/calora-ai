@@ -28,6 +28,8 @@ WEEKDAY_MAP = {
     "friday": 4, "saturday": 5, "sunday": 6
 }
 
+MONTH_REGEX = r'(?:january|jan|february|feb|march|mar|april|apr|may|june|jun|july|jul|august|aug|september|sept|sep|october|oct|november|nov|december|dec)'
+
 def resolve_target_date(text: str) -> date:
     """Extracts and normalizes explicit or relative dates from natural language transcript"""
     text_lower = text.lower()
@@ -39,7 +41,7 @@ def resolve_target_date(text: str) -> date:
         return today - timedelta(days=1)
 
     # Check "X days ago"
-    days_ago_match = re.search(r'(\d+)\s+days?\s+ago', text_lower)
+    days_ago_match = re.search(r'\b(\d+)\s+days?\s+ago\b', text_lower)
     if days_ago_match:
         days = int(days_ago_match.group(1))
         return today - timedelta(days=days)
@@ -53,26 +55,30 @@ def resolve_target_date(text: str) -> date:
                 delta_days = 7
             return today - timedelta(days=delta_days)
 
-    # Check date strings: "28th august", "aug 30", "1st september"
-    date_pattern1 = re.search(r'(\d{1,2})(?:st|nd|rd|th)?\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*', text_lower)
+    # Check date strings: "28th august", "aug 30", "1st september", "september 1st"
+    # Pattern 1: Day Month (e.g. "28th aug", "1 september", "5th of may")
+    date_pattern1 = re.search(rf'\b(\d{{1,2}})(?:st|nd|rd|th)?\s+(?:of\s+)?({MONTH_REGEX})\b', text_lower)
     if date_pattern1:
         day_num = int(date_pattern1.group(1))
         month_str = date_pattern1.group(2)
         month_num = MONTH_MAP.get(month_str, today.month)
-        try:
-            return date(today.year, month_num, day_num)
-        except ValueError:
-            pass
+        if 1 <= day_num <= 31:
+            try:
+                return date(today.year, month_num, day_num)
+            except ValueError:
+                pass
 
-    date_pattern2 = re.search(r'(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\s+(\d{1,2})(?:st|nd|rd|th)?', text_lower)
+    # Pattern 2: Month Day (e.g. "aug 30", "september 1st", "on may 5th")
+    date_pattern2 = re.search(rf'\b({MONTH_REGEX})\s+(\d{{1,2}})(?:st|nd|rd|th)?\b', text_lower)
     if date_pattern2:
         month_str = date_pattern2.group(1)
         day_num = int(date_pattern2.group(2))
         month_num = MONTH_MAP.get(month_str, today.month)
-        try:
-            return date(today.year, month_num, day_num)
-        except ValueError:
-            pass
+        if 1 <= day_num <= 31:
+            try:
+                return date(today.year, month_num, day_num)
+            except ValueError:
+                pass
 
     return today
 
@@ -351,6 +357,9 @@ class MasterOrchestratorAgent:
                 if ai_clarifications:
                     clarifications.extend(ai_clarifications)
 
+            saved_meal_id = None
+            saved_workout_id = None
+
             # Pre-Log Protection
             if auto_save and detected_meals:
                 if len(clarifications) == 0:
@@ -371,6 +380,8 @@ class MasterOrchestratorAgent:
                         )
                         db.add(db_meal)
                         db.commit()
+                        db.refresh(db_meal)
+                        saved_meal_id = db_meal.id
                         logger.info(f"[Database] Persisted meal record id={db_meal.id} for date={target_date}")
                         insights.append(f"Logged {dm.meal_type.capitalize()} for {date_label.capitalize()}: {dm.meal_title} ({dm.calories} kcal, {dm.protein_g}g Protein)")
                         operation_performed = "created"
@@ -414,6 +425,8 @@ class MasterOrchestratorAgent:
                     )
                     db.add(db_workout)
                     db.commit()
+                    db.refresh(db_workout)
+                    saved_workout_id = db_workout.id
                     logger.info(f"[Database] Persisted workout record id={db_workout.id} for date={target_date}")
                     insights.append(f"Recorded {detected_workout.exercise_name} for {date_label.capitalize()} ({detected_workout.calories_burned} kcal burned)")
                     operation_performed = "created"
@@ -432,6 +445,8 @@ class MasterOrchestratorAgent:
             detected_meal=detected_meal,
             detected_meals=detected_meals,
             detected_workout=detected_workout,
+            saved_meal_id=saved_meal_id,
+            saved_workout_id=saved_workout_id,
             clarifications=clarifications,
             insights=insights,
             status="success",

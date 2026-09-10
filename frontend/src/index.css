@@ -147,6 +147,10 @@
   animation: shrinkWidth 6s linear forwards;
 }
 
+.animate-undo-progress {
+  animation: shrinkWidth 8s linear forwards;
+}
+
 /* Custom modern scrollbars */
 ::-webkit-scrollbar {
   width: 6px;

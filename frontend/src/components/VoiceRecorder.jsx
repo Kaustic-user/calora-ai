@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Mic, Square, Loader2, Sparkles, Send, Volume2 } from 'lucide-react';
+import { Mic, Square, Loader2, Sparkles, Send, Volume2, Trash2, XCircle } from 'lucide-react';
 
-export default function VoiceRecorder({ onProcessResult, isProcessing, setIsProcessing }) {
+export default function VoiceRecorder({ onProcessResult, isProcessing, setIsProcessing, onCancelProcessing }) {
   const [isRecording, setIsRecording] = useState(false);
   const [recordDuration, setRecordDuration] = useState(0);
   const [textInput, setTextInput] = useState('');
@@ -10,6 +10,8 @@ export default function VoiceRecorder({ onProcessResult, isProcessing, setIsProc
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const timerRef = useRef(null);
+  const abortControllerRef = useRef(null);
+  const streamRef = useRef(null);
 
   useEffect(() => {
     if (isRecording) {
@@ -27,6 +29,7 @@ export default function VoiceRecorder({ onProcessResult, isProcessing, setIsProc
     audioChunksRef.current = [];
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
 
@@ -37,9 +40,19 @@ export default function VoiceRecorder({ onProcessResult, isProcessing, setIsProc
       };
 
       mediaRecorder.onstop = async () => {
+        // If recording was cancelled, skip uploading
+        if (audioChunksRef.current.length === 0) {
+          if (streamRef.current) {
+            streamRef.current.getTracks().forEach((track) => track.stop());
+          }
+          return;
+        }
+
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach((track) => track.stop());
+        }
         await handleAudioUpload(audioBlob);
-        stream.getTracks().forEach((track) => track.stop());
       };
 
       mediaRecorder.start(250);
@@ -64,8 +77,58 @@ export default function VoiceRecorder({ onProcessResult, isProcessing, setIsProc
     }
   };
 
+  const cancelRecording = () => {
+    if (mediaRecorderRef.current) {
+      audioChunksRef.current = []; // Clear chunks so onstop won't upload
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+      }
+      if (mediaRecorderRef.current.state === 'recording') {
+        try {
+          mediaRecorderRef.current.stop();
+        } catch (e) {
+          // ignore
+        }
+      }
+    }
+    setIsRecording(false);
+    setRecordDuration(0);
+
+    // Notify backend
+    fetch('/api/voice/cancel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        stage: 'recording_discard',
+        details: 'User cancelled voice recording before upload.'
+      })
+    }).catch(() => {});
+  };
+
+  const cancelProcessing = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsProcessing(false);
+    onCancelProcessing?.();
+
+    // Notify backend
+    fetch('/api/voice/cancel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        stage: 'in_flight_cancelled',
+        details: 'User aborted active AI parsing request.'
+      })
+    }).catch(() => {});
+  };
+
   const handleAudioUpload = async (blob) => {
     setIsProcessing(true);
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     const formData = new FormData();
     formData.append('file', blob, 'recording.webm');
 
@@ -73,6 +136,7 @@ export default function VoiceRecorder({ onProcessResult, isProcessing, setIsProc
       const response = await fetch('/api/voice/process-audio', {
         method: 'POST',
         body: formData,
+        signal: controller.signal
       });
       const data = await response.json();
       if (!response.ok) {
@@ -87,6 +151,10 @@ export default function VoiceRecorder({ onProcessResult, isProcessing, setIsProc
       }
       onProcessResult(data);
     } catch (error) {
+      if (error.name === 'AbortError') {
+        console.log('Voice audio processing cancelled by user.');
+        return;
+      }
       console.error('Error uploading audio:', error);
       onProcessResult({
         transcript: 'Voice Audio Note',
@@ -96,6 +164,7 @@ export default function VoiceRecorder({ onProcessResult, isProcessing, setIsProc
       });
     } finally {
       setIsProcessing(false);
+      abortControllerRef.current = null;
     }
   };
 
@@ -104,11 +173,15 @@ export default function VoiceRecorder({ onProcessResult, isProcessing, setIsProc
     if (!textInput.trim() || isProcessing) return;
 
     setIsProcessing(true);
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     try {
       const response = await fetch('/api/voice/process-text', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: textInput }),
+        signal: controller.signal
       });
       const data = await response.json();
       if (!response.ok) {
@@ -124,6 +197,10 @@ export default function VoiceRecorder({ onProcessResult, isProcessing, setIsProc
       onProcessResult(data);
       setTextInput('');
     } catch (error) {
+      if (error.name === 'AbortError') {
+        console.log('Text processing cancelled by user.');
+        return;
+      }
       console.error('Error processing text:', error);
       onProcessResult({
         transcript: textInput,
@@ -133,6 +210,7 @@ export default function VoiceRecorder({ onProcessResult, isProcessing, setIsProc
       });
     } finally {
       setIsProcessing(false);
+      abortControllerRef.current = null;
     }
   };
 
@@ -180,8 +258,8 @@ export default function VoiceRecorder({ onProcessResult, isProcessing, setIsProc
           style={{ backgroundColor: 'var(--bg-base)', borderColor: 'var(--border-card)' }}
         >
           <button
-            onClick={() => setMode('voice')}
-            className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+            onClick={() => { if (!isProcessing && !isRecording) setMode('voice'); }}
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
             style={{
               backgroundColor: mode === 'voice' ? 'var(--accent-primary)' : 'transparent',
               color: mode === 'voice' ? '#FFFFFF' : '#94A3B8'
@@ -190,8 +268,8 @@ export default function VoiceRecorder({ onProcessResult, isProcessing, setIsProc
             Voice Mic
           </button>
           <button
-            onClick={() => setMode('text')}
-            className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+            onClick={() => { if (!isProcessing && !isRecording) setMode('text'); }}
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
             style={{
               backgroundColor: mode === 'text' ? 'var(--accent-primary)' : 'transparent',
               color: mode === 'text' ? '#FFFFFF' : '#94A3B8'
@@ -203,7 +281,20 @@ export default function VoiceRecorder({ onProcessResult, isProcessing, setIsProc
       </div>
 
       {mode === 'voice' ? (
-        <div className="flex flex-col items-center justify-center py-6">
+        <div className="flex flex-col items-center justify-center py-6 relative">
+          {/* Discard / Trash Button during active recording */}
+          {isRecording && (
+            <button
+              type="button"
+              onClick={cancelRecording}
+              className="absolute left-4 sm:left-8 top-8 flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 text-xs font-bold transition-all shadow-md active:scale-95 animate-fade-in"
+              title="Discard recording and do not upload"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span className="text-[10px]">Discard</span>
+            </button>
+          )}
+
           {/* Pulsing Voice Button */}
           <div className="relative mb-6">
             {isRecording && (
@@ -255,12 +346,32 @@ export default function VoiceRecorder({ onProcessResult, isProcessing, setIsProc
                   ></span>
                 ))}
               </div>
-              <p className="text-xs text-slate-400 mt-1">Tap the red square when finished</p>
+              <div className="flex items-center gap-3 mt-1">
+                <p className="text-xs text-slate-400">Tap the red square to finish</p>
+                <span className="text-slate-600">•</span>
+                <button
+                  type="button"
+                  onClick={cancelRecording}
+                  className="text-xs font-semibold text-rose-400 hover:text-rose-300 transition-colors"
+                >
+                  Discard Audio
+                </button>
+              </div>
             </div>
           ) : isProcessing ? (
-            <div className="flex items-center gap-2 font-medium text-sm" style={{ color: 'var(--accent-primary)' }}>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Agentic Orchestrator analyzing food & macros...
+            <div className="flex flex-col items-center gap-2.5">
+              <div className="flex items-center gap-2 font-medium text-sm" style={{ color: 'var(--accent-primary)' }}>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Agentic Orchestrator analyzing food & macros...
+              </div>
+              <button
+                type="button"
+                onClick={cancelProcessing}
+                className="px-3.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+              >
+                <XCircle className="w-3.5 h-3.5" />
+                <span>Cancel Process</span>
+              </button>
             </div>
           ) : (
             <div className="text-center">
@@ -277,7 +388,10 @@ export default function VoiceRecorder({ onProcessResult, isProcessing, setIsProc
             <textarea
               rows="3"
               value={textInput}
-              onChange={(e) => setTextInput(e.target.value)}
+              onChange={(e) => {
+                if (!isProcessing) setTextInput(e.target.value);
+              }}
+              readOnly={isProcessing}
               placeholder="e.g. For breakfast I had 1 plate poha, 1 boiled egg, and a cup of masala chai with sugar..."
               className="w-full bg-slate-900/90 border border-slate-700/80 rounded-2xl p-4 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:border-transparent transition-all resize-none"
               style={{ focusRingColor: 'var(--accent-primary)' }}
@@ -293,26 +407,40 @@ export default function VoiceRecorder({ onProcessResult, isProcessing, setIsProc
                 <button
                   key={idx}
                   type="button"
-                  onClick={() => setTextInput(sample)}
-                  className="hidden md:inline-block px-3 py-1 border rounded-xl text-xs text-slate-300 hover:text-white transition-colors"
+                  onClick={() => {
+                    if (!isProcessing) setTextInput(sample);
+                  }}
+                  className="hidden md:inline-block px-3 py-1 border rounded-xl text-xs text-slate-300 hover:text-white transition-colors cursor-pointer"
                   style={{ backgroundColor: 'var(--bg-base)', borderColor: 'var(--border-card)' }}
                 >
                   +{sample}
                 </button>
               ))}
             </div>
-            <button
-              type="submit"
-              disabled={isProcessing || !textInput.trim()}
-              className="flex items-center gap-2 px-5 py-2.5 text-white font-bold rounded-xl text-sm transition-all shadow-lg"
-              style={{
-                backgroundColor: 'var(--accent-primary)',
-                boxShadow: '0 4px 15px var(--accent-glow)'
-              }}
-            >
-              {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-              Analyze & Log
-            </button>
+            <div className="flex items-center gap-2">
+              {isProcessing && (
+                <button
+                  type="button"
+                  onClick={cancelProcessing}
+                  className="px-3.5 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 shadow-sm active:scale-95 cursor-pointer"
+                >
+                  <XCircle className="w-4 h-4" />
+                  <span>Cancel</span>
+                </button>
+              )}
+              <button
+                type="submit"
+                disabled={isProcessing || !textInput.trim()}
+                className="flex items-center gap-2 px-5 py-2.5 text-white font-bold rounded-xl text-sm transition-all shadow-lg cursor-pointer"
+                style={{
+                  backgroundColor: 'var(--accent-primary)',
+                  boxShadow: '0 4px 15px var(--accent-glow)'
+                }}
+              >
+                {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                Analyze & Log
+              </button>
+            </div>
           </div>
         </form>
       )}

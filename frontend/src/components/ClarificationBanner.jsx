@@ -102,7 +102,7 @@ export default function ClarificationBanner({
         </div>
         <div className="flex items-center gap-2">
           <span
-            className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full border"
+            className="hidden sm:inline-block text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full border"
             style={{
               backgroundColor: 'var(--accent-glow)',
               color: 'var(--accent-primary)',
@@ -114,10 +114,11 @@ export default function ClarificationBanner({
           {onDismiss && (
             <button
               onClick={onDismiss}
-              className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-              title="Dismiss and keep default"
+              className="px-2.5 py-1 rounded-xl text-xs font-semibold text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 border border-slate-700/60 hover:border-rose-500/30 transition-all flex items-center gap-1 shadow-sm active:scale-95"
+              title="Cancel and discard this entry without saving"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
+              <span>Cancel & Discard</span>
             </button>
           )}
         </div>

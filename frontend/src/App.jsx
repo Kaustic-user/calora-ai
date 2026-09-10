@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Zap,
   Settings,
@@ -9,7 +9,9 @@ import {
   CheckCircle2,
   AlertCircle,
   Palette,
-  Compass
+  Compass,
+  RotateCcw,
+  X
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -36,9 +38,12 @@ export default function App() {
   const [pendingWorkout, setPendingWorkout] = useState(null);
   const [pendingTranscript, setPendingTranscript] = useState('');
   const [latestInsights, setLatestInsights] = useState([]);
+  const [lastLoggedItem, setLastLoggedItem] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showThemes, setShowThemes] = useState(false);
   const [showBgModal, setShowBgModal] = useState(false);
+
+  const appAbortControllerRef = useRef(null);
 
   // Date Navigation State (YYYY-MM-DD)
   const getTodayStr = () => {
@@ -114,6 +119,32 @@ export default function App() {
     }
   }, [latestInsights]);
 
+  // Auto-dismiss undo notification after 8 seconds (TTL)
+  useEffect(() => {
+    if (lastLoggedItem) {
+      const timer = setTimeout(() => {
+        setLastLoggedItem(null);
+      }, 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [lastLoggedItem]);
+
+  const handleUndoLastLog = async () => {
+    if (!lastLoggedItem) return;
+    try {
+      const endpoint = lastLoggedItem.type === 'workout'
+        ? `/api/logs/workouts/${lastLoggedItem.id}`
+        : `/api/logs/meals/${lastLoggedItem.id}`;
+      await fetch(endpoint, { method: 'DELETE' });
+      const targetDate = lastLoggedItem.date || selectedDate;
+      await fetchDailySummary(targetDate);
+      setLatestInsights([`Cancelled & removed "${lastLoggedItem.title}" from your logs.`]);
+      setLastLoggedItem(null);
+    } catch (err) {
+      console.error('Undo failed:', err);
+    }
+  };
+
   const handleProcessResult = (result) => {
     if (result.status === 'success') {
       if (result.clarifications && result.clarifications.length > 0) {
@@ -136,6 +167,25 @@ export default function App() {
             colors: ['#6366f1', '#8b5cf6', '#06b6d4', '#f59e0b', '#10b981']
           });
         }
+
+        // Track last saved item for 1-click Undo rollback
+        if (result.saved_meal_id) {
+          setLastLoggedItem({
+            type: 'meal',
+            id: result.saved_meal_id,
+            title: result.detected_meal?.meal_title || 'Meal',
+            calories: result.detected_meal?.calories || 0,
+            date: result.navigation_date || selectedDate
+          });
+        } else if (result.saved_workout_id) {
+          setLastLoggedItem({
+            type: 'workout',
+            id: result.saved_workout_id,
+            title: result.detected_workout?.exercise_name || 'Workout',
+            calories: result.detected_workout?.calories_burned || 0,
+            date: result.navigation_date || selectedDate
+          });
+        }
       }
 
       if (result.insights && result.insights.length > 0) {
@@ -152,6 +202,26 @@ export default function App() {
     }
   };
 
+  const handleCancelAllProcessing = () => {
+    if (appAbortControllerRef.current) {
+      appAbortControllerRef.current.abort();
+      appAbortControllerRef.current = null;
+    }
+    setIsProcessing(false);
+    setActiveClarifications([]);
+    setPendingMeal(null);
+    setPendingWorkout(null);
+    setPendingTranscript('');
+    fetch('/api/voice/cancel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        stage: 'in_flight_cancelled',
+        details: 'User cancelled in-flight clarification or parsing process.'
+      })
+    }).catch(() => {});
+  };
+
   const handleResolveClarification = async (clarificationId, chosenOption) => {
     const remaining = activeClarifications.filter((c) => c.id !== clarificationId);
     const isFinal = remaining.length === 0;
@@ -159,8 +229,11 @@ export default function App() {
     // Immediately remove from screen so clarification banner is never stuck/lingering
     setActiveClarifications(remaining);
 
+    let controller = null;
     if (isFinal) {
       setIsProcessing(true);
+      controller = new AbortController();
+      appAbortControllerRef.current = controller;
     }
 
     try {
@@ -177,8 +250,13 @@ export default function App() {
           log_date: targetLogDate,
           is_final: isFinal
         }),
+        signal: controller ? controller.signal : undefined
       });
       const data = await res.json();
+
+      if (data?.status === 'cancelled') {
+        return;
+      }
 
       if (isFinal) {
         confetti({
@@ -196,6 +274,25 @@ export default function App() {
           setSelectedDate(resolvedDate);
         }
         await fetchDailySummary(resolvedDate || selectedDate);
+
+        // Track last saved clarified item for 1-click Undo rollback
+        if (data.meal_id) {
+          setLastLoggedItem({
+            type: 'meal',
+            id: data.meal_id,
+            title: data.meal_title || 'Meal',
+            calories: data.calories || 0,
+            date: resolvedDate || selectedDate
+          });
+        } else if (data.workout_id) {
+          setLastLoggedItem({
+            type: 'workout',
+            id: data.workout_id,
+            title: data.exercise_name || 'Workout',
+            calories: data.calories_burned || 0,
+            date: resolvedDate || selectedDate
+          });
+        }
       }
 
       if (data.message) {
@@ -204,10 +301,15 @@ export default function App() {
         setLatestInsights([`Preference saved: "${chosenOption}".`]);
       }
     } catch (err) {
+      if (err.name === 'AbortError') {
+        console.log('[App] Clarification resolution aborted by user.');
+        return;
+      }
       console.error('Error saving clarification preference:', err);
     } finally {
       if (isFinal) {
         setIsProcessing(false);
+        appAbortControllerRef.current = null;
       }
     }
   };
@@ -219,8 +321,11 @@ export default function App() {
     // Immediately remove from screen so clarification banner is never stuck/lingering
     setActiveClarifications(remaining);
 
+    let controller = null;
     if (isFinal) {
       setIsProcessing(true);
+      controller = new AbortController();
+      appAbortControllerRef.current = controller;
     }
 
     try {
@@ -237,8 +342,13 @@ export default function App() {
       const res = await fetch('/api/voice/resolve-clarification-audio', {
         method: 'POST',
         body: formData,
+        signal: controller ? controller.signal : undefined
       });
       const data = await res.json();
+
+      if (data?.status === 'cancelled') {
+        return;
+      }
 
       if (isFinal) {
         confetti({
@@ -256,6 +366,25 @@ export default function App() {
           setSelectedDate(resolvedDate);
         }
         await fetchDailySummary(resolvedDate || selectedDate);
+
+        // Track last saved clarified item for 1-click Undo rollback
+        if (data.meal_id) {
+          setLastLoggedItem({
+            type: 'meal',
+            id: data.meal_id,
+            title: data.meal_title || 'Meal',
+            calories: data.calories || 0,
+            date: resolvedDate || selectedDate
+          });
+        } else if (data.workout_id) {
+          setLastLoggedItem({
+            type: 'workout',
+            id: data.workout_id,
+            title: data.exercise_name || 'Workout',
+            calories: data.calories_burned || 0,
+            date: resolvedDate || selectedDate
+          });
+        }
       }
 
       if (data.message) {
@@ -264,10 +393,15 @@ export default function App() {
         setLatestInsights([`Spoken preference recorded.`]);
       }
     } catch (err) {
+      if (err.name === 'AbortError') {
+        console.log('[App] Voice clarification resolution aborted by user.');
+        return;
+      }
       console.error('Error processing spoken clarification:', err);
     } finally {
       if (isFinal) {
         setIsProcessing(false);
+        appAbortControllerRef.current = null;
       }
     }
   };
@@ -511,10 +645,19 @@ export default function App() {
           onResolve={handleResolveClarification}
           onResolveVoice={handleResolveClarificationVoice}
           onDismiss={() => {
+            const pendingTitle = pendingMeal?.meal_title || pendingWorkout?.exercise_name || 'Pending Item';
             setActiveClarifications([]);
             setPendingMeal(null);
             setPendingWorkout(null);
             setPendingTranscript('');
+            fetch('/api/voice/cancel', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                stage: 'clarification_discard',
+                details: `User dismissed clarification for "${pendingTitle}".`
+              })
+            }).catch(() => {});
           }}
         />
 
@@ -523,6 +666,7 @@ export default function App() {
           onProcessResult={handleProcessResult}
           isProcessing={isProcessing}
           setIsProcessing={setIsProcessing}
+          onCancelProcessing={handleCancelAllProcessing}
         />
 
         {activeTab === 'dashboard' ? (
@@ -601,6 +745,67 @@ export default function App() {
           onSelectBg={(bgId) => setActiveBg(bgId)}
           onClose={() => setShowBgModal(false)}
         />
+      )}
+
+      {/* Floating 8-Second Undo Snackbar */}
+      {lastLoggedItem && (
+        <aside
+          aria-label="Undo notification"
+          className="fixed bottom-6 right-6 z-50 max-w-sm w-[calc(100%-3rem)] sm:w-auto border rounded-2xl p-4 shadow-2xl backdrop-blur-xl animate-fade-in overflow-hidden"
+          style={{
+            backgroundColor: 'var(--bg-card)',
+            borderColor: 'var(--accent-primary)',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.5)'
+          }}
+        >
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div
+                className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+                style={{ backgroundColor: 'var(--accent-glow)', color: 'var(--accent-primary)' }}
+              >
+                <CheckCircle2 className="w-4 h-4" />
+              </div>
+              <div className="truncate text-xs">
+                <p className="font-bold truncate" style={{ color: 'var(--text-main)' }}>
+                  Logged {lastLoggedItem.title}
+                </p>
+                <p style={{ color: 'var(--text-muted)' }}>
+                  {lastLoggedItem.calories} kcal • {lastLoggedItem.type}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={handleUndoLastLog}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs shadow-md transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                style={{
+                  backgroundColor: '#EF4444',
+                  color: '#FFFFFF'
+                }}
+                title="Cancel & remove this logged entry"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Undo</span>
+              </button>
+              <button
+                onClick={() => setLastLoggedItem(null)}
+                className="p-1.5 rounded-lg transition-colors hover:opacity-80 cursor-pointer"
+                style={{ color: 'var(--text-muted)' }}
+                title="Dismiss"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* 8-second animated TTL progress bar */}
+          <div
+            className="absolute bottom-0 left-0 h-1 animate-undo-progress"
+            style={{ backgroundColor: 'var(--accent-primary)' }}
+          />
+        </aside>
       )}
     </div>
   );

@@ -1,6 +1,7 @@
 import json
 import logging
-from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
+import time
+from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, Request
 from sqlalchemy.orm import Session
 from typing import Optional, List
 
@@ -23,16 +24,41 @@ logger = logging.getLogger("CaloraAI.VoiceAPI")
 
 router = APIRouter(prefix="/api/voice", tags=["Voice & AI"])
 
+last_cancellation_timestamp: float = 0.0
+
+@router.post("/cancel")
+def notify_cancellation(payload: dict = {}):
+    """Prints and logs when user explicitly terminates/cancels the process from UI (recording discard, in-flight abort, clarification discard)"""
+    global last_cancellation_timestamp
+    last_cancellation_timestamp = time.time()
+    stage = payload.get("stage", "general")
+    details = payload.get("details", "")
+    print(f"[Backend Log] User terminated the process: stage='{stage}' | details='{details}'")
+    logger.info(f"[VoiceAPI] User terminated process at stage '{stage}': {details}")
+    return {"status": "cancellation_logged", "stage": stage, "cancelled_at": last_cancellation_timestamp}
+
 @router.post("/process-audio", response_model=AgentProcessResponse)
 async def process_audio_file(
+    request: Request,
     file: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
     """Transcribes WebM audio recording and routes through multi-agent orchestrator"""
+    req_start_time = time.time()
     try:
         audio_bytes = await file.read()
         mime_type = file.content_type or "audio/webm"
         transcript = gemini_service.transcribe_audio(audio_bytes, mime_type)
+
+        if await request.is_disconnected() or (req_start_time < last_cancellation_timestamp):
+            print(f"[Backend Log] Discarding audio processing - process cancelled by user.")
+            logger.info("[VoiceAPI] Audio process cancelled before orchestration.")
+            return AgentProcessResponse(
+                transcript=transcript or "",
+                intent="unknown",
+                operation_performed="none",
+                insights=["Operation cancelled by user."]
+            )
 
         response = orchestrator.process_voice_transcript(
             transcript=transcript or "",
@@ -51,15 +77,27 @@ async def process_audio_file(
         raise HTTPException(status_code=500, detail=err_msg)
 
 @router.post("/process-text", response_model=AgentProcessResponse)
-def process_text_transcript(
+async def process_text_transcript(
+    request: Request,
     payload: AgentVoiceProcessRequest,
     db: Session = Depends(get_db)
 ):
     """Processes typed text transcript without audio transcription"""
+    req_start_time = time.time()
     try:
         text = payload.text or ""
         if not text.strip():
             raise HTTPException(status_code=400, detail="Text cannot be empty.")
+
+        if await request.is_disconnected() or (req_start_time < last_cancellation_timestamp):
+            print(f"[Backend Log] Discarding text processing - process cancelled by user.")
+            logger.info("[VoiceAPI] Text process cancelled before orchestration.")
+            return AgentProcessResponse(
+                transcript=text,
+                intent="unknown",
+                operation_performed="none",
+                insights=["Operation cancelled by user."]
+            )
 
         response = orchestrator.process_voice_transcript(
             transcript=text,
@@ -73,7 +111,8 @@ def process_text_transcript(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/resolve-clarification")
-def resolve_clarification(
+async def resolve_clarification(
+    request: Request,
     payload: ClarificationResolveRequest,
     db: Session = Depends(get_db)
 ):
@@ -82,6 +121,7 @@ def resolve_clarification(
     2. Recalculates the pending meal or workout with the exact confirmed choice explicitly.
     3. Persists the finalized record into SQLite `meal_logs` or `workout_logs`.
     """
+    req_start_time = time.time()
     try:
         # 1. Save habit to UserMemory table
         memory_agent.save_habit(
@@ -128,6 +168,11 @@ def resolve_clarification(
 
             finalized_workout = recalculated_workout or payload.pending_workout
             if finalized_workout:
+                if await request.is_disconnected() or (req_start_time < last_cancellation_timestamp):
+                    print(f"[Backend Log] Discarding clarified workout '{finalized_workout.exercise_name}' - cancelled by user.")
+                    logger.warning("[VoiceAPI] User cancelled request before workout persistence.")
+                    return {"status": "cancelled", "message": "Cancelled by user without saving."}
+
                 w_date = payload.log_date or (finalized_workout.log_date if finalized_workout.log_date else (payload.pending_workout.log_date if payload.pending_workout and payload.pending_workout.log_date else None))
                 if not w_date and payload.raw_transcript:
                     w_date = resolve_target_date(payload.raw_transcript)
@@ -187,6 +232,11 @@ def resolve_clarification(
             finalized_meals = [payload.pending_meal]
 
         if finalized_meals:
+            if await request.is_disconnected() or (req_start_time < last_cancellation_timestamp):
+                print(f"[Backend Log] Discarding clarified meal '{finalized_meals[0].meal_title}' - cancelled by user.")
+                logger.warning("[VoiceAPI] User cancelled request before meal persistence.")
+                return {"status": "cancelled", "message": "Cancelled by user without saving."}
+
             saved_records = []
             for meal in finalized_meals:
                 m_date = payload.log_date or (meal.log_date if meal.log_date else (payload.pending_meal.log_date if payload.pending_meal and payload.pending_meal.log_date else None))
@@ -236,6 +286,7 @@ def resolve_clarification(
 
 @router.post("/resolve-clarification-audio")
 async def resolve_clarification_audio(
+    request: Request,
     file: UploadFile = File(...),
     clarification_id: str = Form(...),
     raw_transcript: Optional[str] = Form(None),
@@ -249,6 +300,7 @@ async def resolve_clarification_audio(
     Accepts spoken audio clarification (e.g. "I ran for 45 minutes" or "Black coffee with stevia"),
     transcribes it, recalculates macros/burn, cleans habit for UserMemory, and logs the record.
     """
+    req_start_time = time.time()
     try:
         audio_bytes = await file.read()
         mime_type = file.content_type or "audio/webm"
@@ -309,6 +361,11 @@ async def resolve_clarification_audio(
             )
 
             if recalculated_workout:
+                if await request.is_disconnected() or (req_start_time < last_cancellation_timestamp):
+                    print(f"[Backend Log] Discarding clarified workout '{recalculated_workout.exercise_name}' - cancelled by user.")
+                    logger.warning("[VoiceAPI] User cancelled request before workout persistence.")
+                    return {"status": "cancelled", "message": "Cancelled by user without saving."}
+
                 w_date = None
                 if log_date:
                     try:
@@ -361,6 +418,11 @@ async def resolve_clarification_audio(
         )
 
         if recalculated_meals:
+            if await request.is_disconnected() or (req_start_time < last_cancellation_timestamp):
+                print(f"[Backend Log] Discarding clarified audio meal '{recalculated_meals[0].meal_title}' - cancelled by user.")
+                logger.warning("[VoiceAPI] User cancelled request before meal persistence.")
+                return {"status": "cancelled", "message": "Cancelled by user without saving."}
+
             m_date = None
             if log_date:
                 try:

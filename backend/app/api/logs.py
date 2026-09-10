@@ -304,6 +304,7 @@ def delete_meal(meal_id: int, db: Session = Depends(get_db)):
     meal = db.query(MealLog).filter(MealLog.id == meal_id).first()
     if not meal:
         raise HTTPException(status_code=404, detail="Meal not found")
+    print(f"[Backend Log] User terminated/undid process: Deleted meal id={meal_id} ('{meal.meal_title}', {meal.calories} kcal, date={meal.log_date})")
     db.delete(meal)
     db.commit()
     return {"status": "deleted", "id": meal_id}
@@ -360,6 +361,7 @@ def delete_workout(workout_id: int, db: Session = Depends(get_db)):
     workout = db.query(WorkoutLog).filter(WorkoutLog.id == workout_id).first()
     if not workout:
         raise HTTPException(status_code=404, detail="Workout not found")
+    print(f"[Backend Log] User terminated/undid process: Deleted workout id={workout_id} ('{workout.exercise_name}', {workout.calories_burned} kcal, date={workout.log_date})")
     db.delete(workout)
     db.commit()
     return {"status": "deleted", "id": workout_id}

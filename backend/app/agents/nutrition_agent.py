@@ -223,7 +223,7 @@ class NutritionAgent:
                 elif "snack" in text_lower or "tea" in text_lower or "coffee" in text_lower or "chai" in text_lower:
                     meal_type = "snack"
 
-                # Beverage checks
+                # Beverage and specific food checks
                 if "coffee" in text_lower:
                     meal_title = "Coffee"
                     if any(k in text_lower for k in ["black", "americano", "espresso", "without milk", "no milk"]):
@@ -249,6 +249,55 @@ class NutritionAgent:
                             assumed_value="Masala Chai with Milk & Sugar (~65 kcal)",
                             options=["Without Sugar", "Standard Chai with Sugar", "Black / Green Tea", "Ginger / Cardamom Spiced"]
                         ))
+                elif "egg white" in text_lower or "egg whites" in text_lower:
+                    # Extract quantity (e.g. "4 boiled egg whites", "4 and a half boiled egg whites")
+                    qty = 4.0
+                    num_match = re.search(r'(\d+(?:\.\d+)?)\s*(?:and\s+a\s+half)?\s*(?:boiled\s+)?egg\s+white', text_lower)
+                    if "and a half" in text_lower or "and half" in text_lower:
+                        qty = 4.5
+                    elif num_match:
+                        try:
+                            qty = float(num_match.group(1))
+                        except Exception:
+                            qty = 4.0
+                    
+                    meal_type = "snack" if "snack" in text_lower or ("breakfast" not in text_lower and "dinner" not in text_lower and "lunch" not in text_lower) else meal_type
+                    cals_per_white = 17.0
+                    prot_per_white = 3.6
+                    items.append(FoodItemBreakdown(
+                        name="Boiled Egg Whites",
+                        portion=f"{qty} Egg Whites",
+                        quantity=qty,
+                        unit="piece",
+                        calories=round(qty * cals_per_white, 1),
+                        protein_g=round(qty * prot_per_white, 1),
+                        carbs_g=round(qty * 0.2, 1),
+                        fat_g=round(qty * 0.1, 1),
+                        fiber_g=0.0,
+                        source="icmr_nin"
+                    ))
+                    meal_title = f"{qty} Boiled Egg Whites" if qty != 1 else "Boiled Egg White"
+                elif "egg" in text_lower or "omelette" in text_lower:
+                    qty = 2.0
+                    num_match = re.search(r'(\d+)\s*(?:boiled\s+)?eggs?', text_lower)
+                    if num_match:
+                        try:
+                            qty = float(num_match.group(1))
+                        except Exception:
+                            qty = 2.0
+                    items.append(FoodItemBreakdown(
+                        name="Boiled Whole Eggs",
+                        portion=f"{int(qty)} Eggs",
+                        quantity=qty,
+                        unit="piece",
+                        calories=round(qty * 72.0, 1),
+                        protein_g=round(qty * 6.3, 1),
+                        carbs_g=round(qty * 0.6, 1),
+                        fat_g=round(qty * 5.0, 1),
+                        fiber_g=0.0,
+                        source="icmr_nin"
+                    ))
+                    meal_title = f"{int(qty)} Boiled Eggs"
                 elif "oat" in text_lower or "yogabar" in text_lower:
                     items.append(FoodItemBreakdown(name="Yogabar / Rolled Oats with Skimmed Milk", portion="60g Dry Weight", quantity=60, unit="g", calories=230.0, protein_g=9.5, carbs_g=39.0, fat_g=4.2, fiber_g=6.0, source="icmr_nin"))
                     meal_title = "Yogabar Oats Bowl"
@@ -260,6 +309,9 @@ class NutritionAgent:
                     items.append(FoodItemBreakdown(name="Phulka with Ghee", portion="2 Rotis", quantity=2, unit="piece", calories=170.0, protein_g=4.8, carbs_g=30.0, fat_g=3.6, fiber_g=3.8, source="icmr_nin"))
                     items.append(FoodItemBreakdown(name="Dal Tadka", portion="1 Katori (150g)", quantity=1, unit="katori", calories=145.0, protein_g=8.2, carbs_g=19.5, fat_g=4.2, fiber_g=4.5, source="icmr_nin"))
                     meal_title = "2 Rotis with Dal Tadka"
+                elif "bread" in text_lower or "sandwich" in text_lower or "toast" in text_lower:
+                    items.append(FoodItemBreakdown(name="Whole Wheat Toast / Bread", portion="2 Slices", quantity=2, unit="piece", calories=140.0, protein_g=6.0, carbs_g=26.0, fat_g=2.0, fiber_g=3.5, source="icmr_nin"))
+                    meal_title = "Wheat Toast / Sandwich"
                 else:
                     items.append(FoodItemBreakdown(name="Homestyle Balanced Meal", portion="1 Plate", quantity=1, unit="plate", calories=350.0, protein_g=10.0, carbs_g=45.0, fat_g=12.0, fiber_g=5.0, source="icmr_nin"))
 

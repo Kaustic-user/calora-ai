@@ -92,7 +92,7 @@ QUERY_HISTORY_REGEX = re.compile(
 
 # 10. Temporal Expressions
 TEMPORAL_REGEX = re.compile(
-    r'\b(yesterday|day\s+before\s+yesterday|today|last\s+night|this\s+morning|last\s+evening|on\s+(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)|\d+\s+days?\s+ago|\d{1,2}(?:st|nd|rd|th)?\s+(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*)\b',
+    r'\b(yesterday|day\s+before\s+yesterday|today|last\s+night|this\s+morning|last\s+evening|on\s+(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)|\d+\s+days?\s+ago|\d{1,2}(?:st|nd|rd|th)?\s+(?:of\s+)?(?:january|jan|february|feb|march|mar|april|apr|may|june|jun|july|jul|august|aug|september|sept|sep|october|oct|november|nov|december|dec)|(?:january|jan|february|feb|march|mar|april|apr|may|june|jun|july|jul|august|aug|september|sept|sep|october|oct|november|nov|december|dec)\s+\d{1,2}(?:st|nd|rd|th)?)\b',
     re.IGNORECASE
 )
 

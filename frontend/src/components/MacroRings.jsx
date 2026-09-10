@@ -26,8 +26,14 @@ export default function MacroRings({ summary }) {
   } = summary;
 
   const effectiveNetCalories = Math.max(0, net_calories);
-  const remainingCalories = Math.max(0, Math.round(calorie_target - net_calories));
-  const calPercent = Math.min(100, Math.max(0, Math.round((effectiveNetCalories / calorie_target) * 100))) || 0;
+  const isOverBudget = effectiveNetCalories > calorie_target;
+  const extraCalories = isOverBudget ? Math.round(effectiveNetCalories - calorie_target) : 0;
+  const remainingCalories = Math.max(0, Math.round(calorie_target - effectiveNetCalories));
+
+  const baseCalPercent = Math.min(100, Math.max(0, Math.round((effectiveNetCalories / calorie_target) * 100))) || 0;
+  const totalCalPercent = Math.round((effectiveNetCalories / calorie_target) * 100) || 0;
+  const overflowPercent = isOverBudget ? Math.min(100, Math.round((extraCalories / calorie_target) * 100)) : 0;
+
   const proteinPercent = Math.min(100, Math.round((protein_consumed / protein_target) * 100)) || 0;
   const carbsPercent = Math.min(100, Math.round((carbs_consumed / carbs_target) * 100)) || 0;
   const fatPercent = Math.min(100, Math.round((fat_consumed / fat_target) * 100)) || 0;
@@ -36,26 +42,36 @@ export default function MacroRings({ summary }) {
   // SVG Circular Ring calculation
   const radius = 64;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (calPercent / 100) * circumference;
+  const strokeDashoffset = circumference - (baseCalPercent / 100) * circumference;
+  const overflowStrokeDashoffset = circumference - (overflowPercent / 100) * circumference;
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       {/* Main Calorie Ring Card */}
       <div
-        className="lg:col-span-5 border rounded-3xl p-6 shadow-2xl flex flex-col items-center justify-center relative overflow-hidden transition-colors"
+        className="lg:col-span-5 border rounded-3xl p-6 shadow-2xl flex flex-col items-center justify-center relative overflow-hidden transition-all"
         style={{
           backgroundColor: 'var(--bg-card)',
-          borderColor: 'var(--border-card)'
+          borderColor: isOverBudget ? 'rgba(239, 68, 68, 0.4)' : 'var(--border-card)'
         }}
       >
-        <div className="absolute top-4 left-4 flex items-center gap-2">
-          <Flame className="w-5 h-5" style={{ color: 'var(--color-cal)' }} />
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Daily Calorie Budget</span>
+        <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Flame className="w-5 h-5" style={{ color: isOverBudget ? '#EF4444' : 'var(--color-cal)' }} />
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              {isOverBudget ? 'Budget Exceeded' : 'Daily Calorie Budget'}
+            </span>
+          </div>
+          {isOverBudget && (
+            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-400 uppercase tracking-wider animate-pulse">
+              +{extraCalories} kcal Over
+            </span>
+          )}
         </div>
 
         {/* Circular Progress Meter */}
-        <div className="relative flex items-center justify-center my-4">
+        <div className="relative flex items-center justify-center my-4 pt-4">
           <svg className="w-44 h-44 transform -rotate-90">
             {/* Background Track */}
             <circle
@@ -67,26 +83,56 @@ export default function MacroRings({ summary }) {
               className="text-slate-800/60"
               fill="transparent"
             />
-            {/* Progress Stroke */}
-            <circle
-              cx="88"
-              cy="88"
-              r={radius}
-              stroke="var(--color-cal)"
-              strokeWidth="12"
-              strokeDasharray={circumference}
-              strokeDashoffset={strokeDashoffset}
-              strokeLinecap="round"
-              className="transition-all duration-1000 ease-out"
-              fill="transparent"
-            />
+            {/* Base Progress Stroke (rendered only when within budget) */}
+            {!isOverBudget && (
+              <circle
+                cx="88"
+                cy="88"
+                r={radius}
+                stroke="var(--color-cal)"
+                strokeWidth="12"
+                strokeDasharray={circumference}
+                strokeDashoffset={strokeDashoffset}
+                strokeLinecap="round"
+                className="transition-all duration-1000 ease-out"
+                fill="transparent"
+              />
+            )}
+            {/* Extra Over-Budget Stroke in Vibrant Red (rendered when over budget) */}
+            {isOverBudget && (
+              <circle
+                cx="88"
+                cy="88"
+                r={radius}
+                stroke="#EF4444"
+                strokeWidth="13"
+                strokeDasharray={circumference}
+                strokeDashoffset={overflowStrokeDashoffset}
+                strokeLinecap="round"
+                className="transition-all duration-1000 ease-out"
+                style={{
+                  filter: 'drop-shadow(0 0 6px rgba(239, 68, 68, 0.75))'
+                }}
+                fill="transparent"
+              />
+            )}
           </svg>
 
           {/* Central Calorie Metric */}
-          <div className="absolute flex flex-col items-center justify-center text-center">
-            <span className="text-3xl font-extrabold text-white tracking-tight">{remainingCalories}</span>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">kcal left</span>
-            <span className="text-[10px] mt-0.5 font-bold" style={{ color: 'var(--color-cal)' }}>{calPercent}% net of target</span>
+          <div className="absolute flex flex-col items-center justify-center text-center px-2">
+            {isOverBudget ? (
+              <>
+                <span className="text-3xl font-black text-rose-500 tracking-tight">+{extraCalories}</span>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-rose-400">kcal extra</span>
+                <span className="text-[10px] mt-0.5 font-bold text-rose-400/90">{totalCalPercent}% ({extraCalories} over)</span>
+              </>
+            ) : (
+              <>
+                <span className="text-3xl font-extrabold text-white tracking-tight">{remainingCalories}</span>
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">kcal left</span>
+                <span className="text-[10px] mt-0.5 font-bold" style={{ color: 'var(--color-cal)' }}>{baseCalPercent}% net of target</span>
+              </>
+            )}
           </div>
         </div>
 
