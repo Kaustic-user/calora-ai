@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Union
 from pydantic import BaseModel, Field, ConfigDict
 
 # ==========================================
@@ -156,6 +156,7 @@ class DailySummaryResponse(BaseModel):
 
 class AgentVoiceProcessRequest(BaseModel):
     text: Optional[str] = None
+    target_date: Optional[Union[date, str]] = None
 
 class ClarificationItem(BaseModel):
     id: str
@@ -184,6 +185,8 @@ class AgentProcessResponse(BaseModel):
     insights: List[str] = []
     status: str = "success"
     navigation_date: Optional[date] = None
+    has_explicit_date: bool = False
+    log_date: Optional[date] = None
     operation_performed: Optional[str] = None # created, updated, deleted, queried, none
 
 # ==========================================

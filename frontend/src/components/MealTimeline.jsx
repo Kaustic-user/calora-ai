@@ -25,7 +25,7 @@ export default function MealTimeline({ meals, onDeleteMeal, onEditMeal, onAddMea
         {onAddMeal && (
           <button
             onClick={onAddMeal}
-            className="mt-4 px-4 py-2 rounded-xl text-xs font-bold text-black inline-flex items-center gap-1.5 shadow-md transition-all hover:opacity-90"
+            className="mt-4 px-4 py-2 rounded-xl text-xs font-bold text-black inline-flex items-center gap-1.5 shadow-md transition-all hover:opacity-90 cursor-pointer"
             style={{ backgroundColor: 'var(--accent-primary)' }}
           >
             <Plus className="w-3.5 h-3.5" />
@@ -60,7 +60,7 @@ export default function MealTimeline({ meals, onDeleteMeal, onEditMeal, onAddMea
         {onAddMeal && (
           <button
             onClick={onAddMeal}
-            className="px-3 py-1.5 rounded-xl text-xs font-bold border flex items-center gap-1.5 transition-all shadow-sm hover:scale-102 active:scale-95"
+            className="px-3 py-1.5 rounded-xl text-xs font-bold border flex items-center gap-1.5 transition-all shadow-sm hover:scale-102 active:scale-95 cursor-pointer"
             style={{
               backgroundColor: 'var(--bg-card)',
               borderColor: 'var(--border-card)',
@@ -106,7 +106,7 @@ export default function MealTimeline({ meals, onDeleteMeal, onEditMeal, onAddMea
                   {onEditMeal && (
                     <button
                       onClick={() => onEditMeal(meal)}
-                      className="p-1.5 text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-all"
+                      className="p-1.5 text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-all cursor-pointer"
                       title="Edit meal"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
@@ -114,7 +114,7 @@ export default function MealTimeline({ meals, onDeleteMeal, onEditMeal, onAddMea
                   )}
                   <button
                     onClick={() => onDeleteMeal(meal.id)}
-                    className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all"
+                    className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all cursor-pointer"
                     title="Delete meal"
                   >
                     <Trash2 className="w-3.5 h-3.5" />

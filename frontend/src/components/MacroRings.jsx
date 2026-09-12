@@ -26,12 +26,14 @@ export default function MacroRings({ summary }) {
   } = summary;
 
   const effectiveNetCalories = Math.max(0, net_calories);
-  const isOverBudget = effectiveNetCalories > calorie_target;
-  const extraCalories = isOverBudget ? Math.round(effectiveNetCalories - calorie_target) : 0;
-  const remainingCalories = Math.max(0, Math.round(calorie_target - effectiveNetCalories));
+  const intakeExcess = calories_consumed > calorie_target ? Math.round(calories_consumed - calorie_target) : 0;
+  const netExcess = effectiveNetCalories > calorie_target ? Math.round(effectiveNetCalories - calorie_target) : 0;
+  const isOverBudget = intakeExcess > 0 || netExcess > 0;
+  const extraCalories = Math.max(intakeExcess, netExcess);
+  const remainingCalories = isOverBudget ? 0 : Math.max(0, Math.round(calorie_target - (calories_consumed > 0 ? calories_consumed : effectiveNetCalories)));
 
-  const baseCalPercent = Math.min(100, Math.max(0, Math.round((effectiveNetCalories / calorie_target) * 100))) || 0;
-  const totalCalPercent = Math.round((effectiveNetCalories / calorie_target) * 100) || 0;
+  const baseCalPercent = isOverBudget ? 100 : (Math.min(100, Math.max(0, Math.round((Math.max(calories_consumed, effectiveNetCalories) / calorie_target) * 100))) || 0);
+  const totalCalPercent = Math.round((Math.max(calories_consumed, effectiveNetCalories) / calorie_target) * 100) || 0;
   const overflowPercent = isOverBudget ? Math.min(100, Math.round((extraCalories / calorie_target) * 100)) : 0;
 
   const proteinPercent = Math.min(100, Math.round((protein_consumed / protein_target) * 100)) || 0;
@@ -180,12 +182,12 @@ export default function MacroRings({ summary }) {
           <div>
             <div className="flex justify-between text-xs font-semibold mb-1">
               <span className="flex items-center gap-1.5 font-bold" style={{ color: 'var(--color-protein)' }}>
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--color-protein)' }}></span>
+                <span className="w-2 h-2 rounded-full shadow-sm" style={{ backgroundColor: 'var(--color-protein)', boxShadow: '0 0 6px var(--color-protein)' }}></span>
                 Protein ({Math.round(protein_consumed)}g / {Math.round(protein_target)}g)
               </span>
               <span className="text-slate-400">{proteinPercent}%</span>
             </div>
-            <div className="w-full h-2.5 bg-slate-800/80 rounded-full overflow-hidden">
+            <div className="w-full h-2.5 bg-slate-800/80 rounded-full overflow-hidden shadow-inner">
               <div
                 className="h-full rounded-full transition-all duration-700"
                 style={{ width: `${proteinPercent}%`, backgroundColor: 'var(--color-protein)' }}
@@ -197,12 +199,12 @@ export default function MacroRings({ summary }) {
           <div>
             <div className="flex justify-between text-xs font-semibold mb-1">
               <span className="flex items-center gap-1.5 font-bold" style={{ color: 'var(--color-carbs)' }}>
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--color-carbs)' }}></span>
-                Carbohydrates ({Math.round(carbs_consumed)}g / {Math.round(carbs_target)}g)
+                <span className="w-2 h-2 rounded-full shadow-sm" style={{ backgroundColor: 'var(--color-carbs)', boxShadow: '0 0 6px var(--color-carbs)' }}></span>
+                Carbs ({Math.round(carbs_consumed)}g / {Math.round(carbs_target)}g)
               </span>
               <span className="text-slate-400">{carbsPercent}%</span>
             </div>
-            <div className="w-full h-2.5 bg-slate-800/80 rounded-full overflow-hidden">
+            <div className="w-full h-2.5 bg-slate-800/80 rounded-full overflow-hidden shadow-inner">
               <div
                 className="h-full rounded-full transition-all duration-700"
                 style={{ width: `${carbsPercent}%`, backgroundColor: 'var(--color-carbs)' }}
@@ -210,16 +212,16 @@ export default function MacroRings({ summary }) {
             </div>
           </div>
 
-          {/* Fats */}
+          {/* Fat */}
           <div>
             <div className="flex justify-between text-xs font-semibold mb-1">
               <span className="flex items-center gap-1.5 font-bold" style={{ color: 'var(--color-fat)' }}>
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--color-fat)' }}></span>
-                Fats ({Math.round(fat_consumed)}g / {Math.round(fat_target)}g)
+                <span className="w-2 h-2 rounded-full shadow-sm" style={{ backgroundColor: 'var(--color-fat)', boxShadow: '0 0 6px var(--color-fat)' }}></span>
+                Fat ({Math.round(fat_consumed)}g / {Math.round(fat_target)}g)
               </span>
               <span className="text-slate-400">{fatPercent}%</span>
             </div>
-            <div className="w-full h-2.5 bg-slate-800/80 rounded-full overflow-hidden">
+            <div className="w-full h-2.5 bg-slate-800/80 rounded-full overflow-hidden shadow-inner">
               <div
                 className="h-full rounded-full transition-all duration-700"
                 style={{ width: `${fatPercent}%`, backgroundColor: 'var(--color-fat)' }}
@@ -227,16 +229,16 @@ export default function MacroRings({ summary }) {
             </div>
           </div>
 
-          {/* Dietary Fiber */}
+          {/* Fiber */}
           <div>
             <div className="flex justify-between text-xs font-semibold mb-1">
               <span className="flex items-center gap-1.5 font-bold" style={{ color: 'var(--color-fiber)' }}>
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--color-fiber)' }}></span>
-                Dietary Fiber ({Math.round(fiber_consumed)}g / {Math.round(fiber_target)}g)
+                <span className="w-2 h-2 rounded-full shadow-sm" style={{ backgroundColor: 'var(--color-fiber)', boxShadow: '0 0 6px var(--color-fiber)' }}></span>
+                Fiber ({Math.round(fiber_consumed)}g / {Math.round(fiber_target)}g)
               </span>
               <span className="text-slate-400">{fiberPercent}%</span>
             </div>
-            <div className="w-full h-2.5 bg-slate-800/80 rounded-full overflow-hidden">
+            <div className="w-full h-2.5 bg-slate-800/80 rounded-full overflow-hidden shadow-inner">
               <div
                 className="h-full rounded-full transition-all duration-700"
                 style={{ width: `${fiberPercent}%`, backgroundColor: 'var(--color-fiber)' }}
@@ -310,7 +312,7 @@ export default function MacroRings({ summary }) {
           </span>
         </div>
       </div>
+      </div>
     </div>
-  </div>
   );
 }

@@ -173,9 +173,8 @@ async def resolve_clarification(
                     logger.warning("[VoiceAPI] User cancelled request before workout persistence.")
                     return {"status": "cancelled", "message": "Cancelled by user without saving."}
 
-                w_date = payload.log_date or (finalized_workout.log_date if finalized_workout.log_date else (payload.pending_workout.log_date if payload.pending_workout and payload.pending_workout.log_date else None))
-                if not w_date and payload.raw_transcript:
-                    w_date = resolve_target_date(payload.raw_transcript)
+                target_d, _ = resolve_target_date(payload.raw_transcript)
+                w_date = payload.log_date or (finalized_workout.log_date if finalized_workout.log_date else (payload.pending_workout.log_date if payload.pending_workout and payload.pending_workout.log_date else target_d))
                 if not w_date:
                     w_date = date.today()
 
@@ -239,9 +238,8 @@ async def resolve_clarification(
 
             saved_records = []
             for meal in finalized_meals:
-                m_date = payload.log_date or (meal.log_date if meal.log_date else (payload.pending_meal.log_date if payload.pending_meal and payload.pending_meal.log_date else None))
-                if not m_date and payload.raw_transcript:
-                    m_date = resolve_target_date(payload.raw_transcript)
+                target_d, _ = resolve_target_date(payload.raw_transcript)
+                m_date = payload.log_date or (meal.log_date if meal.log_date else (payload.pending_meal.log_date if payload.pending_meal and payload.pending_meal.log_date else target_d))
                 if not m_date:
                     m_date = date.today()
 
@@ -373,7 +371,8 @@ async def resolve_clarification_audio(
                     except Exception:
                         pass
                 if not w_date and raw_transcript:
-                    w_date = resolve_target_date(raw_transcript)
+                    target_d, _ = resolve_target_date(raw_transcript)
+                    w_date = target_d
                 if not w_date:
                     w_date = date.today()
 
@@ -430,7 +429,8 @@ async def resolve_clarification_audio(
                 except Exception:
                     pass
             if not m_date and raw_transcript:
-                m_date = resolve_target_date(raw_transcript)
+                target_d, _ = resolve_target_date(raw_transcript)
+                m_date = target_d
             if not m_date:
                 m_date = date.today()
 

@@ -2,7 +2,7 @@ import re
 import json
 import logging
 from datetime import date, datetime, timedelta
-from typing import Dict, Any, Optional, List, Tuple
+from typing import Dict, Any, Optional, List, Tuple, Union
 from sqlalchemy.orm import Session
 
 from app.agents.intent_agent import intent_agent
@@ -30,21 +30,28 @@ WEEKDAY_MAP = {
 
 MONTH_REGEX = r'(?:january|jan|february|feb|march|mar|april|apr|may|june|jun|july|jul|august|aug|september|sept|sep|october|oct|november|nov|december|dec)'
 
-def resolve_target_date(text: str) -> date:
-    """Extracts and normalizes explicit or relative dates from natural language transcript"""
-    text_lower = text.lower()
+def resolve_target_date(text: str) -> Tuple[date, bool]:
+    """Extracts and normalizes explicit or relative dates from natural language transcript.
+    Returns (resolved_date, has_explicit_date).
+    If no explicit date is spoken in the transcript, defaults to (date.today(), False).
+    """
+    text_lower = text.lower() if text else ""
     today = date.today()
 
     if "day before yesterday" in text_lower:
-        return today - timedelta(days=2)
+        return (today - timedelta(days=2), True)
     elif "yesterday" in text_lower or "last night" in text_lower or "last evening" in text_lower:
-        return today - timedelta(days=1)
+        return (today - timedelta(days=1), True)
+    elif "today" in text_lower or "this morning" in text_lower or "this afternoon" in text_lower or "tonight" in text_lower:
+        return (today, True)
+    elif "tomorrow" in text_lower:
+        return (today + timedelta(days=1), True)
 
     # Check "X days ago"
     days_ago_match = re.search(r'\b(\d+)\s+days?\s+ago\b', text_lower)
     if days_ago_match:
         days = int(days_ago_match.group(1))
-        return today - timedelta(days=days)
+        return (today - timedelta(days=days), True)
 
     # Check weekday expressions: "on monday", "last friday"
     for day_name, target_weekday in WEEKDAY_MAP.items():
@@ -53,7 +60,7 @@ def resolve_target_date(text: str) -> date:
             delta_days = (current_weekday - target_weekday) % 7
             if delta_days == 0:
                 delta_days = 7
-            return today - timedelta(days=delta_days)
+            return (today - timedelta(days=delta_days), True)
 
     # Check date strings: "28th august", "aug 30", "1st september", "september 1st"
     # Pattern 1: Day Month (e.g. "28th aug", "1 september", "5th of may")
@@ -64,7 +71,7 @@ def resolve_target_date(text: str) -> date:
         month_num = MONTH_MAP.get(month_str, today.month)
         if 1 <= day_num <= 31:
             try:
-                return date(today.year, month_num, day_num)
+                return (date(today.year, month_num, day_num), True)
             except ValueError:
                 pass
 
@@ -76,11 +83,11 @@ def resolve_target_date(text: str) -> date:
         month_num = MONTH_MAP.get(month_str, today.month)
         if 1 <= day_num <= 31:
             try:
-                return date(today.year, month_num, day_num)
+                return (date(today.year, month_num, day_num), True)
             except ValueError:
                 pass
 
-    return today
+    return (today, False)
 
 class MasterOrchestratorAgent:
     def process_voice_transcript(
@@ -104,11 +111,13 @@ class MasterOrchestratorAgent:
                 clarifications=[],
                 insights=["No clear speech was detected in that recording. Please hold the mic and speak your meal or workout!"],
                 status="success",
-                navigation_date=date.today(),
+                navigation_date=None,
+                has_explicit_date=False,
+                log_date=date.today(),
                 operation_performed="none"
             )
 
-        target_date = resolve_target_date(transcript)
+        target_date, has_explicit_date = resolve_target_date(transcript)
         date_label = "today" if target_date == date.today() else ("yesterday" if target_date == date.today() - timedelta(days=1) else target_date.strftime("%b %d"))
 
         profile = db.query(UserProfile).filter(UserProfile.id == user_id).first()
@@ -450,7 +459,9 @@ class MasterOrchestratorAgent:
             clarifications=clarifications,
             insights=insights,
             status="success",
-            navigation_date=target_date,
+            navigation_date=target_date if has_explicit_date else None,
+            has_explicit_date=has_explicit_date,
+            log_date=target_date,
             operation_performed=operation_performed
         )
 

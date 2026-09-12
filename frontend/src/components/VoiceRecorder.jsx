@@ -180,7 +180,9 @@ export default function VoiceRecorder({ onProcessResult, isProcessing, setIsProc
       const response = await fetch('/api/voice/process-text', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: textInput }),
+        body: JSON.stringify({
+          text: textInput
+        }),
         signal: controller.signal
       });
       const data = await response.json();
@@ -306,7 +308,7 @@ export default function VoiceRecorder({ onProcessResult, isProcessing, setIsProc
             <button
               onClick={isRecording ? stopRecording : startRecording}
               disabled={isProcessing}
-              className={`relative z-10 w-24 h-24 rounded-full flex flex-col items-center justify-center transition-all duration-300 transform active:scale-95 shadow-xl ${
+              className={`relative z-10 w-24 h-24 rounded-full flex flex-col items-center justify-center transition-all duration-300 transform active:scale-95 shadow-xl cursor-pointer ${
                 isRecording
                   ? 'bg-gradient-to-br from-rose-500 to-red-600 shadow-rose-500/40'
                   : 'shadow-lg hover:scale-105'

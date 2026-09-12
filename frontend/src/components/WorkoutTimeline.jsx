@@ -27,7 +27,7 @@ export default function WorkoutTimeline({ workouts, onDeleteWorkout, onEditWorko
         {onAddWorkout && (
           <button
             onClick={onAddWorkout}
-            className="mt-4 px-4 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 shadow-md transition-all hover:opacity-90"
+            className="mt-4 px-4 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 shadow-md transition-all hover:opacity-90 cursor-pointer"
             style={{ backgroundColor: 'var(--accent-primary)', color: '#000000' }}
           >
             <Plus className="w-3.5 h-3.5" />
@@ -61,7 +61,7 @@ export default function WorkoutTimeline({ workouts, onDeleteWorkout, onEditWorko
         {onAddWorkout && (
           <button
             onClick={onAddWorkout}
-            className="px-3 py-1.5 rounded-xl text-xs font-bold border flex items-center gap-1.5 transition-all shadow-sm hover:scale-102 active:scale-95"
+            className="px-3 py-1.5 rounded-xl text-xs font-bold border flex items-center gap-1.5 transition-all shadow-sm hover:scale-102 active:scale-95 cursor-pointer"
             style={{
               backgroundColor: 'var(--bg-card)',
               borderColor: 'var(--border-card)',
@@ -107,7 +107,7 @@ export default function WorkoutTimeline({ workouts, onDeleteWorkout, onEditWorko
                   {onEditWorkout && (
                     <button
                       onClick={() => onEditWorkout(workout)}
-                      className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all"
+                      className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all cursor-pointer"
                       title="Edit workout"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
@@ -115,7 +115,7 @@ export default function WorkoutTimeline({ workouts, onDeleteWorkout, onEditWorko
                   )}
                   <button
                     onClick={() => onDeleteWorkout(workout.id)}
-                    className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all"
+                    className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all cursor-pointer"
                     title="Delete workout"
                   >
                     <Trash2 className="w-3.5 h-3.5" />

@@ -55,6 +55,10 @@ export default function App() {
   };
 
   const [selectedDate, setSelectedDate] = useState(getTodayStr());
+  const selectedDateRef = useRef(selectedDate);
+  useEffect(() => {
+    selectedDateRef.current = selectedDate;
+  }, [selectedDate]);
 
   // Edit / Manual Add Modal State
   const [editModalState, setEditModalState] = useState({
@@ -83,12 +87,15 @@ export default function App() {
     localStorage.setItem('calora_bg', activeBg);
   }, [activeBg]);
 
-  const fetchDailySummary = async (dateToFetch = selectedDate) => {
+  const fetchDailySummary = async (dateToFetch) => {
+    const targetDate = dateToFetch || selectedDateRef.current;
     try {
-      const url = dateToFetch ? `/api/logs/daily-summary?target_date=${dateToFetch}` : '/api/logs/daily-summary';
+      const url = targetDate ? `/api/logs/daily-summary?target_date=${targetDate}` : '/api/logs/daily-summary';
       const res = await fetch(url);
       const data = await res.json();
-      setDailySummary(data);
+      if (data && (!targetDate || targetDate === selectedDateRef.current)) {
+        setDailySummary(data);
+      }
     } catch (err) {
       console.error('Failed to fetch summary:', err);
     }
@@ -169,13 +176,14 @@ export default function App() {
         }
 
         // Track last saved item for 1-click Undo rollback
+        const logDate = result.log_date || (result.has_explicit_date ? result.navigation_date : getTodayStr());
         if (result.saved_meal_id) {
           setLastLoggedItem({
             type: 'meal',
             id: result.saved_meal_id,
             title: result.detected_meal?.meal_title || 'Meal',
             calories: result.detected_meal?.calories || 0,
-            date: result.navigation_date || selectedDate
+            date: logDate
           });
         } else if (result.saved_workout_id) {
           setLastLoggedItem({
@@ -183,7 +191,7 @@ export default function App() {
             id: result.saved_workout_id,
             title: result.detected_workout?.exercise_name || 'Workout',
             calories: result.detected_workout?.calories_burned || 0,
-            date: result.navigation_date || selectedDate
+            date: logDate
           });
         }
       }
@@ -192,12 +200,13 @@ export default function App() {
         setLatestInsights(result.insights);
       }
 
-      // Auto-navigate to target date if returned by voice agent
-      if (result.navigation_date) {
+      // Auto-navigate ONLY IF the user explicitly specified a date in their speech/text (e.g. "yesterday I had dosa")
+      if (result.has_explicit_date && result.navigation_date) {
         setSelectedDate(result.navigation_date);
         fetchDailySummary(result.navigation_date);
       } else {
-        fetchDailySummary(selectedDate);
+        // If it was a default log (logged for today), refresh whatever date the user is actively viewing
+        fetchDailySummary(selectedDateRef.current);
       }
     }
   };
@@ -534,35 +543,37 @@ export default function App() {
         {/* Tab switcher & Action Controls */}
         <div className="flex items-center gap-2 sm:gap-3">
           <div
-            className="hidden sm:flex p-1 rounded-xl border"
+            className="flex p-1 rounded-xl border shadow-sm"
             style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-card)' }}
           >
             <button
               onClick={() => setActiveTab('dashboard')}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+              className="px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5"
               style={{
                 backgroundColor: activeTab === 'dashboard' ? 'var(--accent-primary)' : 'transparent',
-                color: activeTab === 'dashboard' ? '#FFFFFF' : 'var(--text-muted)'
+                color: activeTab === 'dashboard' ? '#000000' : 'var(--text-muted)'
               }}
             >
-              Dashboard
+              <Zap className="w-3.5 h-3.5" />
+              <span>Dashboard</span>
             </button>
             <button
               onClick={() => setActiveTab('analytics')}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+              className="px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5"
               style={{
                 backgroundColor: activeTab === 'analytics' ? 'var(--accent-primary)' : 'transparent',
-                color: activeTab === 'analytics' ? '#FFFFFF' : 'var(--text-muted)'
+                color: activeTab === 'analytics' ? '#000000' : 'var(--text-muted)'
               }}
             >
-              Weekly Trends
+              <HeartPulse className="w-3.5 h-3.5" />
+              <span>Weekly Trends</span>
             </button>
           </div>
 
           {/* Background FX Selector Button */}
           <button
             onClick={() => setShowBgModal(true)}
-            className="flex items-center gap-1.5 px-3 py-2 border rounded-xl text-xs font-bold transition-all hover:scale-105"
+            className="flex items-center gap-1.5 px-3 py-2 border rounded-xl text-xs font-bold transition-all hover:scale-105 cursor-pointer"
             style={{
               backgroundColor: 'var(--bg-card)',
               borderColor: 'var(--border-card)',
@@ -577,7 +588,7 @@ export default function App() {
           {/* Theme Palette Switcher Button */}
           <button
             onClick={() => setShowThemes(true)}
-            className="flex items-center gap-1.5 px-3 py-2 border rounded-xl text-xs font-bold transition-all hover:scale-105"
+            className="flex items-center gap-1.5 px-3 py-2 border rounded-xl text-xs font-bold transition-all hover:scale-105 cursor-pointer"
             style={{
               backgroundColor: 'var(--bg-card)',
               borderColor: 'var(--border-card)',
@@ -592,7 +603,7 @@ export default function App() {
           {/* Settings Modal Button */}
           <button
             onClick={() => setShowSettings(true)}
-            className="p-2 border rounded-xl transition-colors hover:scale-105"
+            className="p-2 border rounded-xl transition-colors hover:scale-105 cursor-pointer"
             style={{
               backgroundColor: 'var(--bg-card)',
               borderColor: 'var(--border-card)',
@@ -623,7 +634,7 @@ export default function App() {
               </div>
               <button
                 onClick={() => setLatestInsights([])}
-                className="text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors"
+                className="text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
                 style={{ backgroundColor: 'var(--bg-card-subtle)', color: 'var(--text-main)' }}
               >
                 Dismiss
@@ -706,7 +717,7 @@ export default function App() {
           </>
         ) : (
           /* Weekly Analytics and Trend Charts */
-          <ProgressCharts refreshTrigger={dailySummary?.meals?.length || 0} />
+          <ProgressCharts refreshTrigger={`${selectedDate}_${dailySummary?.calories_consumed || 0}_${dailySummary?.calories_burned || 0}_${dailySummary?.meals?.length || 0}_${dailySummary?.workouts?.length || 0}`} />
         )}
       </main>
 
