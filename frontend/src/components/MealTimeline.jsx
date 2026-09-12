@@ -125,18 +125,58 @@ export default function MealTimeline({ meals, onDeleteMeal, onEditMeal, onAddMea
               {/* Items List */}
               <div className="space-y-1.5 mb-4">
                 {meal.items &&
-                  meal.items.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="flex justify-between items-center text-xs px-2.5 py-1.5 rounded-lg border"
-                      style={{ backgroundColor: 'var(--bg-card-subtle)', borderColor: 'var(--border-card)' }}
-                    >
-                      <span className="text-slate-300 font-medium">
-                        {item.portion} {item.name}
-                      </span>
-                      <span className="font-semibold text-slate-200">{item.calories} kcal</span>
-                    </div>
-                  ))}
+                  meal.items.map((item, idx) => {
+                    const hasMacros = (item.protein_g > 0 || item.carbs_g > 0 || item.fat_g > 0 || item.fiber_g > 0);
+
+                    return (
+                      <div
+                        key={idx}
+                        className="relative group/item flex justify-between items-center text-xs px-2.5 py-1.5 rounded-lg border transition-all hover:border-slate-600 hover:bg-slate-800/40 cursor-default"
+                        style={{ backgroundColor: 'var(--bg-card-subtle)', borderColor: 'var(--border-card)' }}
+                      >
+                        <span className="text-slate-300 font-medium truncate mr-2 group-hover/item:text-white transition-colors">
+                          {item.portion ? `${item.portion} ` : ''}{item.name}
+                        </span>
+                        <span className="font-semibold text-slate-200 group-hover/item:text-emerald-400 transition-colors shrink-0">
+                          {item.calories} kcal
+                        </span>
+
+                        {/* Custom Appealing Floating Tooltip (Macros Only) */}
+                        {hasMacros && (
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 pointer-events-none opacity-0 invisible group-hover/item:opacity-100 group-hover/item:visible transition-all duration-200 transform translate-y-1 group-hover/item:translate-y-0 z-30 shadow-2xl">
+                            <div className="bg-slate-950/95 backdrop-blur-md border border-slate-700/80 rounded-xl px-2.5 py-1.5 flex items-center gap-1.5 shadow-2xl whitespace-nowrap">
+                              {item.protein_g > 0 && (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-300 bg-indigo-500/15 border border-indigo-500/30 px-1.5 py-0.5 rounded-md">
+                                  <span>🥩</span>
+                                  <span>{item.protein_g}g Prot</span>
+                                </span>
+                              )}
+                              {item.carbs_g > 0 && (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-300 bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.5 rounded-md">
+                                  <span>🌾</span>
+                                  <span>{item.carbs_g}g Carb</span>
+                                </span>
+                              )}
+                              {item.fat_g > 0 && (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-300 bg-rose-500/15 border border-rose-500/30 px-1.5 py-0.5 rounded-md">
+                                  <span>🥑</span>
+                                  <span>{item.fat_g}g Fat</span>
+                                </span>
+                              )}
+                              {item.fiber_g > 0 && (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-cyan-300 bg-cyan-500/15 border border-cyan-500/30 px-1.5 py-0.5 rounded-md">
+                                  <span>🥗</span>
+                                  <span>{item.fiber_g}g Fib</span>
+                                </span>
+                              )}
+                            </div>
+                            {/* Downward Pointer Arrow */}
+                            <div className="w-2 h-2 bg-slate-950 border-r border-b border-slate-700/80 transform rotate-45 mx-auto -mt-1" />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
               </div>
 
               {/* Assumptions Tag if any */}

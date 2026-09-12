@@ -727,6 +727,7 @@ export default function App() {
         mode={editModalState.mode}
         initialData={editModalState.data}
         selectedDate={selectedDate}
+        userWeightKg={profile?.weight_kg || profile?.weight || 70.0}
         onClose={() => setEditModalState(prev => ({ ...prev, isOpen: false }))}
         onSave={handleSaveEdit}
       />
