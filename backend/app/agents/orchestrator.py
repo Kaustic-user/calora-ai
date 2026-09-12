@@ -132,6 +132,8 @@ class MasterOrchestratorAgent:
         detected_meals: List[MealLogCreate] = []
         detected_meal: Optional[MealLogCreate] = None
         detected_workout: Optional[WorkoutLogCreate] = None
+        saved_meal_id: Optional[int] = None
+        saved_workout_id: Optional[int] = None
         clarifications = []
         insights = []
         operation_performed = "none"
@@ -365,9 +367,6 @@ class MasterOrchestratorAgent:
                 )
                 if ai_clarifications:
                     clarifications.extend(ai_clarifications)
-
-            saved_meal_id = None
-            saved_workout_id = None
 
             # Pre-Log Protection
             if auto_save and detected_meals:
