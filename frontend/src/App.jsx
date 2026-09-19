@@ -566,7 +566,7 @@ export default function App() {
               }}
             >
               <HeartPulse className="w-3.5 h-3.5" />
-              <span>Weekly Trends</span>
+              <span>Trends</span>
             </button>
           </div>
 

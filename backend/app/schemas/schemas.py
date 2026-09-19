@@ -273,3 +273,5 @@ class WeeklyTrendsResponse(BaseModel):
     weekly_net_deficit: float = 0.0
     projected_weight_change_kg: float = 0.0
     days_logged: int
+    timeframe_days: int = 7
+    timeframe_label: str = "7 Days"

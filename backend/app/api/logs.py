@@ -108,9 +108,14 @@ def get_daily_summary(
     )
 
 @router.get("/weekly-trends", response_model=WeeklyTrendsResponse)
-def get_weekly_trends(db: Session = Depends(get_db)):
+def get_weekly_trends(
+    days: Optional[int] = Query(None, ge=1, le=365, description="Timeframe in days (e.g., 7, 14, 30, 90)"),
+    start_date: Optional[date] = Query(None, description="Start date of custom range (YYYY-MM-DD)"),
+    end_date: Optional[date] = Query(None, description="End date of custom range (YYYY-MM-DD)"),
+    db: Session = Depends(get_db)
+):
     """
-    Computes real-time 7-day rolling trends across calorie intake, burn, and macronutrients.
+    Computes real-time rolling trends across calorie intake, burn, and macronutrients over the specified number of days or custom date range.
     """
     profile = db.query(UserProfile).first()
     if not profile:
@@ -124,11 +129,40 @@ def get_weekly_trends(db: Session = Depends(get_db)):
     )
 
     today = date.today()
-    start_date = today - timedelta(days=6)
 
-    # Query all meals and workouts in the last 7 days
-    meals = db.query(MealLog).filter(MealLog.log_date >= start_date, MealLog.log_date <= today).all()
-    workouts = db.query(WorkoutLog).filter(WorkoutLog.log_date >= start_date, WorkoutLog.log_date <= today).all()
+    if start_date is not None and end_date is not None:
+        if start_date > end_date:
+            start_date, end_date = end_date, start_date
+        total_days = (end_date - start_date).days + 1
+        if total_days > 365:
+            start_date = end_date - timedelta(days=364)
+            total_days = 365
+        if start_date.year == end_date.year:
+            timeframe_label = f"{start_date.strftime('%b %d')} – {end_date.strftime('%b %d, %Y')}"
+        else:
+            timeframe_label = f"{start_date.strftime('%b %d, %Y')} – {end_date.strftime('%b %d, %Y')}"
+    elif days is not None:
+        total_days = days
+        end_date = today
+        start_date = end_date - timedelta(days=total_days - 1)
+        timeframe_label = f"{total_days} Days"
+        if total_days == 7:
+            timeframe_label = "7 Days"
+        elif total_days == 14:
+            timeframe_label = "14 Days"
+        elif total_days == 30:
+            timeframe_label = "30 Days"
+        elif total_days == 90:
+            timeframe_label = "90 Days"
+    else:
+        total_days = 7
+        end_date = today
+        start_date = end_date - timedelta(days=total_days - 1)
+        timeframe_label = "7 Days"
+
+    # Query all meals and workouts in the timeframe
+    meals = db.query(MealLog).filter(MealLog.log_date >= start_date, MealLog.log_date <= end_date).all()
+    workouts = db.query(WorkoutLog).filter(WorkoutLog.log_date >= start_date, WorkoutLog.log_date <= end_date).all()
 
     daily_points = []
     total_cals = 0.0
@@ -137,9 +171,16 @@ def get_weekly_trends(db: Session = Depends(get_db)):
     total_weekly_deficit = 0.0
     days_logged_count = 0
 
-    for i in range(6, -1, -1):
-        cur_date = today - timedelta(days=i)
-        day_label = "Today" if cur_date == today else cur_date.strftime("%a")
+    for i in range(total_days):
+        cur_date = start_date + timedelta(days=i)
+        if cur_date == today:
+            day_label = "Today"
+        elif total_days <= 7:
+            day_label = cur_date.strftime("%a")
+        elif total_days <= 14:
+            day_label = f"{cur_date.strftime('%a')} {cur_date.day}"
+        else:
+            day_label = f"{cur_date.strftime('%b')} {cur_date.day}"
 
         day_meals = [m for m in meals if m.log_date == cur_date]
         day_workouts = [w for w in workouts if w.log_date == cur_date]
@@ -202,7 +243,9 @@ def get_weekly_trends(db: Session = Depends(get_db)):
         weekly_total_burned=round(total_burned),
         weekly_net_deficit=round(total_weekly_deficit),
         projected_weight_change_kg=projected_kg,
-        days_logged=days_logged_count
+        days_logged=days_logged_count,
+        timeframe_days=total_days,
+        timeframe_label=timeframe_label
     )
 
 @router.post("/meals", response_model=MealLogResponse)
