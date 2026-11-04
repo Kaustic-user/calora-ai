@@ -2,6 +2,7 @@ import json
 import logging
 import time
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, Request
+from fastapi.concurrency import run_in_threadpool
 from sqlalchemy.orm import Session
 from typing import Optional, List
 
@@ -48,7 +49,7 @@ async def process_audio_file(
     try:
         audio_bytes = await file.read()
         mime_type = file.content_type or "audio/webm"
-        transcript = gemini_service.transcribe_audio(audio_bytes, mime_type)
+        transcript = await run_in_threadpool(gemini_service.transcribe_audio, audio_bytes, mime_type)
 
         if await request.is_disconnected() or (req_start_time < last_cancellation_timestamp):
             print(f"[Backend Log] Discarding audio processing - process cancelled by user.")
@@ -60,7 +61,8 @@ async def process_audio_file(
                 insights=["Operation cancelled by user."]
             )
 
-        response = orchestrator.process_voice_transcript(
+        response = await run_in_threadpool(
+            orchestrator.process_voice_transcript,
             transcript=transcript or "",
             db=db,
             user_id=1,
@@ -99,7 +101,8 @@ async def process_text_transcript(
                 insights=["Operation cancelled by user."]
             )
 
-        response = orchestrator.process_voice_transcript(
+        response = await run_in_threadpool(
+            orchestrator.process_voice_transcript,
             transcript=text,
             db=db,
             user_id=1,
@@ -160,7 +163,8 @@ async def resolve_clarification(
             profile = db.query(UserProfile).filter(UserProfile.id == 1).first()
             user_weight = profile.weight_kg if profile and profile.weight_kg else 70.0
             user_memory = memory_agent.get_user_context(db)
-            recalculated_workout, _ = workout_agent.parse_workout(
+            recalculated_workout, _ = await run_in_threadpool(
+                workout_agent.parse_workout,
                 text=confirmed_text,
                 user_weight_kg=user_weight,
                 user_memory=user_memory
@@ -218,7 +222,8 @@ async def resolve_clarification(
         confirmed_text = f"{base_text} (Prepared with: {payload.chosen_option})"
         logger.info(f"[VoiceAPI] Recalculating meal macros for: \"{confirmed_text}\"")
 
-        recalculated_meals, _ = nutrition_agent.parse_meal(
+        recalculated_meals, _ = await run_in_threadpool(
+            nutrition_agent.parse_meal,
             text=confirmed_text,
             user_preference=dietary_pref,
             user_memory=user_memory
@@ -304,7 +309,8 @@ async def resolve_clarification_audio(
         mime_type = file.content_type or "audio/webm"
 
         # 1. Transcribe the spoken clarification snippet
-        spoken_clarification = gemini_service.transcribe_audio(audio_bytes, mime_type).strip()
+        raw_transcription = await run_in_threadpool(gemini_service.transcribe_audio, audio_bytes, mime_type)
+        spoken_clarification = (raw_transcription or "").strip()
         if not spoken_clarification:
             spoken_clarification = "Custom preparation"
 
@@ -313,7 +319,8 @@ async def resolve_clarification_audio(
         # 2. Extract clean habit value (concise 2-5 words)
         clean_habit_value = spoken_clarification
         if len(spoken_clarification.split()) > 3:
-            clean_summary = gemini_service.generate_json_response(
+            clean_summary = await run_in_threadpool(
+                gemini_service.generate_json_response,
                 prompt=f"Extract concise preference from spoken clarification '{spoken_clarification}' for question '{clarification_id}'.",
                 system_instruction="Output JSON with format: {'clean_preference': string (e.g. '45 Minutes', 'Americano / Espresso + Water', 'Dry / No Ghee')}"
             )
@@ -352,7 +359,8 @@ async def resolve_clarification_audio(
             profile = db.query(UserProfile).filter(UserProfile.id == 1).first()
             user_weight = profile.weight_kg if profile and profile.weight_kg else 70.0
             user_memory = memory_agent.get_user_context(db)
-            recalculated_workout, _ = workout_agent.parse_workout(
+            recalculated_workout, _ = await run_in_threadpool(
+                workout_agent.parse_workout,
                 text=confirmed_text,
                 user_weight_kg=user_weight,
                 user_memory=user_memory
@@ -410,7 +418,8 @@ async def resolve_clarification_audio(
         confirmed_text = f"{base_text} (Prepared with: {spoken_clarification})"
         logger.info(f"[VoiceAPI] Recalculating meal macros for: \"{confirmed_text}\"")
 
-        recalculated_meals, _ = nutrition_agent.parse_meal(
+        recalculated_meals, _ = await run_in_threadpool(
+            nutrition_agent.parse_meal,
             text=confirmed_text,
             user_preference=dietary_pref,
             user_memory=user_memory

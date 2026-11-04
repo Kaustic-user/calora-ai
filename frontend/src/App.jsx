@@ -31,6 +31,8 @@ import EditLogModal from './components/EditLogModal';
 
 export default function App() {
   const [dailySummary, setDailySummary] = useState(null);
+  const [loadingDailySummary, setLoadingDailySummary] = useState(false);
+  const activeSummaryFetchId = useRef(0);
   const [profile, setProfile] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeClarifications, setActiveClarifications] = useState([]);
@@ -89,15 +91,21 @@ export default function App() {
 
   const fetchDailySummary = async (dateToFetch) => {
     const targetDate = dateToFetch || selectedDateRef.current;
+    const fetchId = ++activeSummaryFetchId.current;
+    setLoadingDailySummary(true);
     try {
       const url = targetDate ? `/api/logs/daily-summary?target_date=${targetDate}` : '/api/logs/daily-summary';
       const res = await fetch(url);
       const data = await res.json();
-      if (data && (!targetDate || targetDate === selectedDateRef.current)) {
+      if (data && fetchId === activeSummaryFetchId.current) {
         setDailySummary(data);
       }
     } catch (err) {
       console.error('Failed to fetch summary:', err);
+    } finally {
+      if (fetchId === activeSummaryFetchId.current) {
+        setLoadingDailySummary(false);
+      }
     }
   };
 
@@ -680,45 +688,48 @@ export default function App() {
           onCancelProcessing={handleCancelAllProcessing}
         />
 
-        {activeTab === 'dashboard' ? (
-          <>
-            {/* Interactive Date Navigation Bar */}
-            <DateNavigator
-              selectedDate={selectedDate}
-              onDateChange={(newD) => {
-                setSelectedDate(newD);
-                fetchDailySummary(newD);
-              }}
+        {/* Dashboard Tab Panel */}
+        <div className={activeTab === 'dashboard' ? 'space-y-6' : 'hidden'}>
+          {/* Interactive Date Navigation Bar */}
+          <DateNavigator
+            selectedDate={selectedDate}
+            onDateChange={(newD) => {
+              setSelectedDate(newD);
+              fetchDailySummary(newD);
+            }}
+          />
+
+          {/* Daily Macro Budget & Rings */}
+          <MacroRings summary={dailySummary} />
+
+          {/* Meal & Workout Logs Timelines */}
+          <div className="grid grid-cols-1 gap-6">
+            <MealTimeline
+              meals={dailySummary?.meals || []}
+              onDeleteMeal={handleDeleteMeal}
+              onEditMeal={handleEditMeal}
+              onAddMeal={handleAddMeal}
+              isToday={selectedDate === getTodayStr()}
+              isLoading={loadingDailySummary}
             />
+            <WorkoutTimeline
+              workouts={dailySummary?.workouts || []}
+              onDeleteWorkout={handleDeleteWorkout}
+              onEditWorkout={handleEditWorkout}
+              onAddWorkout={handleAddWorkout}
+              isToday={selectedDate === getTodayStr()}
+              isLoading={loadingDailySummary}
+            />
+          </div>
 
-            {/* Daily Macro Budget & Rings */}
-            <MacroRings summary={dailySummary} />
+          {/* Proactive Indian Meal Recommender ("Hit Your Macros") */}
+          <MealRecommender onQuickLog={handleQuickLogMeal} />
+        </div>
 
-            {/* Meal & Workout Logs Timelines */}
-            <div className="grid grid-cols-1 gap-6">
-              <MealTimeline
-                meals={dailySummary?.meals || []}
-                onDeleteMeal={handleDeleteMeal}
-                onEditMeal={handleEditMeal}
-                onAddMeal={handleAddMeal}
-                isToday={selectedDate === getTodayStr()}
-              />
-              <WorkoutTimeline
-                workouts={dailySummary?.workouts || []}
-                onDeleteWorkout={handleDeleteWorkout}
-                onEditWorkout={handleEditWorkout}
-                onAddWorkout={handleAddWorkout}
-                isToday={selectedDate === getTodayStr()}
-              />
-            </div>
-
-            {/* Proactive Indian Meal Recommender ("Hit Your Macros") */}
-            <MealRecommender onQuickLog={handleQuickLogMeal} />
-          </>
-        ) : (
-          /* Weekly Analytics and Trend Charts */
-          <ProgressCharts refreshTrigger={`${selectedDate}_${dailySummary?.calories_consumed || 0}_${dailySummary?.calories_burned || 0}_${dailySummary?.meals?.length || 0}_${dailySummary?.workouts?.length || 0}`} />
-        )}
+        {/* Analytics & Trends Tab Panel (Kept mounted to preserve chart cache and prevent loading flicker) */}
+        <div className={activeTab === 'analytics' ? 'block' : 'hidden'}>
+          <ProgressCharts refreshTrigger={`${dailySummary?.calories_consumed || 0}_${dailySummary?.calories_burned || 0}_${dailySummary?.meals?.length || 0}_${dailySummary?.workouts?.length || 0}`} />
+        </div>
       </main>
 
       {/* Manual / Edit Entry Modal */}

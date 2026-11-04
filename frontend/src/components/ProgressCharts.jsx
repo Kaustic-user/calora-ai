@@ -60,6 +60,9 @@ function ChartDateRangePicker({
   const [tempDays, setTempDays] = useState(filter?.days || 7);
   const [tempStartDate, setTempStartDate] = useState(filter?.startDate || getDaysAgoStr(30));
   const [tempEndDate, setTempEndDate] = useState(filter?.endDate || getTodayStr());
+  const [tempPreset, setTempPreset] = useState(
+    filter?.preset || (filter?.mode === 'days' ? String(filter?.days || 7) : null)
+  );
   const [applyToAll, setApplyToAll] = useState(false);
   const popoverRef = useRef(null);
 
@@ -69,6 +72,24 @@ function ChartDateRangePicker({
       setTempDays(filter?.days || 7);
       setTempStartDate(filter?.startDate || getDaysAgoStr(30));
       setTempEndDate(filter?.endDate || getTodayStr());
+      if (filter?.preset) {
+        setTempPreset(filter.preset);
+      } else if (filter?.mode === 'days') {
+        setTempPreset(String(filter?.days || 7));
+      } else {
+        const start = filter?.startDate;
+        const end = filter?.endDate;
+        const lm = getLastMonthRange();
+        if (start === getStartOfMonthStr() && end === getTodayStr()) {
+          setTempPreset('thisMonth');
+        } else if (start === lm.start && end === lm.end) {
+          setTempPreset('lastMonth');
+        } else if (start === getYearToDateStr() && end === getTodayStr()) {
+          setTempPreset('ytd');
+        } else {
+          setTempPreset(null);
+        }
+      }
     }
   }, [isOpen, filter]);
 
@@ -97,10 +118,12 @@ function ChartDateRangePicker({
     setTempDays(days);
     setTempStartDate(getDaysAgoStr(days));
     setTempEndDate(getTodayStr());
+    setTempPreset(String(days));
   };
 
   const handleCustomPreset = (type) => {
     setTempMode('custom');
+    setTempPreset(type);
     if (type === 'thisMonth') {
       setTempStartDate(getStartOfMonthStr());
       setTempEndDate(getTodayStr());
@@ -122,16 +145,23 @@ function ChartDateRangePicker({
       if (s > e) {
         const t = s; s = e; e = t;
       }
+      let label = `${s.slice(5)} → ${e.slice(5)}`;
+      if (tempPreset === 'thisMonth') label = 'This Month';
+      else if (tempPreset === 'lastMonth') label = 'Last Month';
+      else if (tempPreset === 'ytd') label = 'YTD';
+
       finalFilter = {
         mode: 'custom',
+        preset: tempPreset,
         days: null,
         startDate: s,
         endDate: e,
-        label: `${s.slice(5)} → ${e.slice(5)}`
+        label: label
       };
     } else {
       finalFilter = {
         mode: 'days',
+        preset: String(tempDays),
         days: tempDays,
         startDate: getDaysAgoStr(tempDays),
         endDate: getTodayStr(),
@@ -196,7 +226,7 @@ function ChartDateRangePicker({
             </label>
             <div className="grid grid-cols-4 gap-1.5">
               {[7, 14, 30, 90].map((d) => {
-                const active = tempMode === 'days' && tempDays === d;
+                const active = tempMode === 'days' && (tempPreset === String(d) || tempDays === d);
                 return (
                   <button
                     key={d}
@@ -217,30 +247,30 @@ function ChartDateRangePicker({
               })}
             </div>
             <div className="grid grid-cols-3 gap-1.5 mt-1.5">
-              <button
-                type="button"
-                onClick={() => handleCustomPreset('thisMonth')}
-                className="py-1 px-2 rounded-xl text-[11px] font-semibold transition-all border text-slate-300 hover:text-white hover:border-slate-400 cursor-pointer"
-                style={{ backgroundColor: 'var(--bg-card-subtle)', borderColor: 'var(--border-card)' }}
-              >
-                This Month
-              </button>
-              <button
-                type="button"
-                onClick={() => handleCustomPreset('lastMonth')}
-                className="py-1 px-2 rounded-xl text-[11px] font-semibold transition-all border text-slate-300 hover:text-white hover:border-slate-400 cursor-pointer"
-                style={{ backgroundColor: 'var(--bg-card-subtle)', borderColor: 'var(--border-card)' }}
-              >
-                Last Month
-              </button>
-              <button
-                type="button"
-                onClick={() => handleCustomPreset('ytd')}
-                className="py-1 px-2 rounded-xl text-[11px] font-semibold transition-all border text-slate-300 hover:text-white hover:border-slate-400 cursor-pointer"
-                style={{ backgroundColor: 'var(--bg-card-subtle)', borderColor: 'var(--border-card)' }}
-              >
-                YTD
-              </button>
+              {[
+                { id: 'thisMonth', label: 'This Month' },
+                { id: 'lastMonth', label: 'Last Month' },
+                { id: 'ytd', label: 'YTD' }
+              ].map((p) => {
+                const active = tempMode === 'custom' && tempPreset === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => handleCustomPreset(p.id)}
+                    className={`py-1 px-2 rounded-xl text-[11px] font-semibold transition-all border cursor-pointer ${
+                      active ? 'shadow-sm font-bold' : 'text-slate-300 hover:text-white hover:bg-white/5'
+                    }`}
+                    style={
+                      active
+                        ? { backgroundColor: 'var(--accent-primary)', color: '#000000', borderColor: 'var(--accent-primary)' }
+                        : { backgroundColor: 'var(--bg-card-subtle)', borderColor: 'var(--border-card)' }
+                    }
+                  >
+                    {p.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -259,6 +289,7 @@ function ChartDateRangePicker({
                   onChange={(e) => {
                     setTempStartDate(e.target.value);
                     setTempMode('custom');
+                    setTempPreset(null);
                   }}
                   className="w-full px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all focus:outline-none"
                   style={{
@@ -279,6 +310,7 @@ function ChartDateRangePicker({
                   onChange={(e) => {
                     setTempEndDate(e.target.value);
                     setTempMode('custom');
+                    setTempPreset(null);
                   }}
                   className="w-full px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all focus:outline-none"
                   style={{
@@ -347,20 +379,20 @@ function ChartDateRangePicker({
 
 export default function ProgressCharts({ refreshTrigger = 0 }) {
   // Global / Top Badge Summary State
-  const [globalFilter, setGlobalFilter] = useState({ mode: 'days', days: 7, label: '7D' });
+  const [globalFilter, setGlobalFilter] = useState({ mode: 'days', days: 7, label: '7D', preset: '7' });
   const [globalTrends, setGlobalTrends] = useState(null);
   const [globalLoading, setGlobalLoading] = useState(true);
 
   // Individual Chart Filters & Data States
-  const [calorieFilter, setCalorieFilter] = useState({ mode: 'days', days: 7, label: '7D' });
+  const [calorieFilter, setCalorieFilter] = useState({ mode: 'days', days: 7, label: '7D', preset: '7' });
   const [calorieTrends, setCalorieTrends] = useState(null);
   const [calorieLoading, setCalorieLoading] = useState(true);
 
-  const [proteinFilter, setProteinFilter] = useState({ mode: 'days', days: 7, label: '7D' });
+  const [proteinFilter, setProteinFilter] = useState({ mode: 'days', days: 7, label: '7D', preset: '7' });
   const [proteinTrends, setProteinTrends] = useState(null);
   const [proteinLoading, setProteinLoading] = useState(true);
 
-  const [deficitFilter, setDeficitFilter] = useState({ mode: 'days', days: 7, label: '7D' });
+  const [deficitFilter, setDeficitFilter] = useState({ mode: 'days', days: 7, label: '7D', preset: '7' });
   const [deficitTrends, setDeficitTrends] = useState(null);
   const [deficitLoading, setDeficitLoading] = useState(true);
 

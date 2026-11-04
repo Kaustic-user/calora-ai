@@ -1,7 +1,19 @@
 import React from 'react';
-import { Utensils, Trash2, Edit2, Clock, CheckCircle2, AlertCircle, Plus } from 'lucide-react';
+import { Utensils, Trash2, Edit2, Clock, CheckCircle2, AlertCircle, Plus, Loader2 } from 'lucide-react';
 
-export default function MealTimeline({ meals, onDeleteMeal, onEditMeal, onAddMeal, isToday = true }) {
+export default function MealTimeline({ meals, onDeleteMeal, onEditMeal, onAddMeal, isToday = true, isLoading = false }) {
+  if (isLoading) {
+    return (
+      <div
+        className="border rounded-3xl p-8 text-center shadow-xl transition-all flex flex-col items-center justify-center min-h-[160px]"
+        style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-card)' }}
+      >
+        <Loader2 className="w-6 h-6 animate-spin mb-2" style={{ color: 'var(--accent-primary)' }} />
+        <p className="text-xs text-slate-400">Loading meals...</p>
+      </div>
+    );
+  }
+
   if (!meals || meals.length === 0) {
     return (
       <div

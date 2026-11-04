@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Check, Sparkles, Mic, Square, Loader2, X } from 'lucide-react';
+import { Check, Sparkles, Mic, Square, Loader2, X, Send } from 'lucide-react';
 
 export default function ClarificationBanner({
   clarifications,
@@ -11,10 +11,52 @@ export default function ClarificationBanner({
 }) {
   const [recordingId, setRecordingId] = useState(null);
   const [savingIds, setSavingIds] = useState(new Set());
+  const [textInputs, setTextInputs] = useState({});
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
 
   if (!clarifications || clarifications.length === 0) return null;
+
+  const handleTextChange = (id, value) => {
+    setTextInputs((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handleTextSubmit = async (clarificationId) => {
+    const text = (textInputs[clarificationId] || '').trim();
+    if (!text) return;
+    setSavingIds((prev) => new Set(prev).add(clarificationId));
+    try {
+      if (onResolve) {
+        await onResolve(clarificationId, text);
+      }
+      setTextInputs((prev) => {
+        const next = { ...prev };
+        delete next[clarificationId];
+        return next;
+      });
+    } finally {
+      setSavingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(clarificationId);
+        return next;
+      });
+    }
+  };
+
+  const handleOptionClick = async (clarificationId, option) => {
+    setSavingIds((prev) => new Set(prev).add(clarificationId));
+    try {
+      if (onResolve) {
+        await onResolve(clarificationId, option);
+      }
+    } finally {
+      setSavingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(clarificationId);
+        return next;
+      });
+    }
+  };
 
   const startVoiceClarification = async (clarificationId) => {
     audioChunksRef.current = [];
@@ -109,12 +151,12 @@ export default function ClarificationBanner({
               borderColor: 'var(--accent-primary)'
             }}
           >
-            1-Tap or Speak
+            1-Tap, Speak, or Type
           </span>
           {onDismiss && (
             <button
               onClick={onDismiss}
-              className="px-2.5 py-1 rounded-xl text-xs font-semibold text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 border border-slate-700/60 hover:border-rose-500/30 transition-all flex items-center gap-1 shadow-sm active:scale-95"
+              className="px-2.5 py-1 rounded-xl text-xs font-semibold text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 border border-slate-700/60 hover:border-rose-500/30 transition-all flex items-center gap-1 shadow-sm active:scale-95 cursor-pointer"
               title="Cancel and discard this entry without saving"
             >
               <X className="w-3.5 h-3.5" />
@@ -147,8 +189,8 @@ export default function ClarificationBanner({
                   <button
                     key={idx}
                     disabled={isThisRecording || isThisSaving}
-                    onClick={() => onResolve && onResolve(item.id, opt)}
-                    className="px-3.5 py-2 border text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-1.5 hover:scale-105 active:scale-95 text-white disabled:opacity-50"
+                    onClick={() => handleOptionClick(item.id, opt)}
+                    className="px-3.5 py-2 border text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-1.5 hover:scale-105 active:scale-95 text-white disabled:opacity-50 cursor-pointer"
                     style={{
                       backgroundColor: idx === 0 ? 'var(--accent-primary)' : 'var(--bg-card)',
                       borderColor: idx === 0 ? 'var(--accent-primary)' : 'var(--border-card)',
@@ -171,7 +213,7 @@ export default function ClarificationBanner({
                       startVoiceClarification(item.id);
                     }
                   }}
-                  className={`px-3 py-2 border text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-1.5 hover:scale-105 active:scale-95 disabled:opacity-50 ${
+                  className={`px-3 py-2 border text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-1.5 hover:scale-105 active:scale-95 disabled:opacity-50 cursor-pointer ${
                     isThisRecording
                       ? 'bg-rose-600 border-rose-500 text-white animate-pulse'
                       : 'bg-slate-900 border-slate-700 text-slate-300 hover:border-emerald-500 hover:text-emerald-400'
@@ -196,6 +238,59 @@ export default function ClarificationBanner({
                   )}
                 </button>
               </div>
+
+              {/* Text Box Option for Custom Clarification */}
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleTextSubmit(item.id);
+                }}
+                className="mt-3 pt-3 border-t flex items-center gap-2"
+                style={{ borderColor: 'var(--border-card)' }}
+              >
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    value={textInputs[item.id] || ''}
+                    onChange={(e) => handleTextChange(item.id, e.target.value)}
+                    placeholder="Or type custom answer (e.g. oat milk, stevia, 50g, 20 mins)..."
+                    disabled={isThisRecording || isThisSaving}
+                    maxLength={200}
+                    className="w-full px-3.5 py-2 text-xs rounded-xl border transition-all focus:outline-none disabled:opacity-50"
+                    style={{
+                      backgroundColor: 'var(--bg-card)',
+                      borderColor: 'var(--border-card)',
+                      color: 'var(--text-main)'
+                    }}
+                    onFocus={(e) => { e.target.style.borderColor = 'var(--accent-primary)'; }}
+                    onBlur={(e) => { e.target.style.borderColor = 'var(--border-card)'; }}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={!textInputs[item.id]?.trim() || isThisRecording || isThisSaving}
+                  className="px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm disabled:opacity-40 disabled:cursor-not-allowed hover:scale-105 active:scale-95 cursor-pointer whitespace-nowrap"
+                  style={{
+                    backgroundColor: textInputs[item.id]?.trim() ? 'var(--accent-primary)' : 'var(--bg-card)',
+                    borderColor: textInputs[item.id]?.trim() ? 'var(--accent-primary)' : 'var(--border-card)',
+                    color: textInputs[item.id]?.trim() ? '#000000' : 'var(--text-muted)',
+                    borderWidth: '1px'
+                  }}
+                  title="Submit custom clarification"
+                >
+                  {isThisSaving ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-3.5 h-3.5" />
+                      <span>Send</span>
+                    </>
+                  )}
+                </button>
+              </form>
             </div>
           );
         })}

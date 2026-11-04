@@ -1,7 +1,19 @@
 import React from 'react';
-import { Dumbbell, Trash2, Edit2, Clock, Flame, Zap, Plus } from 'lucide-react';
+import { Dumbbell, Trash2, Edit2, Clock, Flame, Zap, Plus, Loader2 } from 'lucide-react';
 
-export default function WorkoutTimeline({ workouts, onDeleteWorkout, onEditWorkout, onAddWorkout, isToday = true }) {
+export default function WorkoutTimeline({ workouts, onDeleteWorkout, onEditWorkout, onAddWorkout, isToday = true, isLoading = false }) {
+  if (isLoading) {
+    return (
+      <div
+        className="border rounded-3xl p-8 text-center shadow-xl transition-all flex flex-col items-center justify-center min-h-[160px]"
+        style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-card)' }}
+      >
+        <Loader2 className="w-6 h-6 animate-spin mb-2" style={{ color: 'var(--accent-primary)' }} />
+        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Loading workouts...</p>
+      </div>
+    );
+  }
+
   if (!workouts || workouts.length === 0) {
     return (
       <div
